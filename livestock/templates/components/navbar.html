@@ -1,0 +1,332 @@
+{% load static %}
+<!-- Fixed navigation bar at the top with glassmorphism effect -->
+<header class="fixed w-full top-0 left-0 right-0 z-[100] transition-all duration-300" id="navbar-container">
+    <nav id="main-navbar" class="bg-white backdrop-filter backdrop-blur-lg bg-opacity-70 border-b border-amber-100 shadow-sm transition-all duration-300">
+        <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <!-- Logo -->
+                <div class="flex items-center">
+                    <a href="{% url 'home' %}" class="flex items-center">
+                        <!-- Use a fallback text logo since the image is missing -->
+                        <div class="h-12 w-12 bg-amber-100 rounded-full flex items-center justify-center mr-3">
+                            <span class="text-amber-600 text-xl font-bold">LM</span>
+                        </div>
+                        <span class="text-xl font-bold text-amber-900">Livestock Manager</span>
+                    </a>
+                </div>
+
+                <!-- Right side navigation -->
+                <div class="ml-auto flex items-center space-x-4" x-data="{ open: false }">
+                    {% if user.is_authenticated %}
+                        <!-- Home Link -->
+                        <a href="{% url 'home' %}" class="text-gray-500 hover:text-amber-700 px-3 py-2 rounded-md text-sm font-medium">
+                            <i class="fas fa-home mr-2"></i>Home
+                        </a>
+                        
+                        <!-- Animals Dropdown -->
+                        <div class="relative" x-data="{ open: false }">
+                            <button @click="open = !open" @click.away="open = false" class="text-gray-500 hover:text-amber-700 px-3 py-2 rounded-md text-sm font-medium inline-flex items-center">
+                                <i class="fas fa-cow mr-2"></i>
+                                Animals
+                                <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                            </button>
+                            <div x-show="open" x-cloak class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
+                                <a href="{% url 'animal_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-amber-50" role="menuitem">View Animals</a>
+                                <a href="{% url 'add_animal' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-amber-50" role="menuitem">Add Animal</a>
+                                <a href="{% url 'health_records' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-amber-50" role="menuitem">Health Records</a>
+                            </div>
+                        </div>
+                        
+                        <!-- Ownership Dropdown -->
+                        <div class="relative" x-data="{ open: false }">
+                            <button @click="open = !open" @click.away="open = false" class="text-gray-500 hover:text-amber-700 px-3 py-2 rounded-md text-sm font-medium inline-flex items-center">
+                                <i class="fas fa-exchange-alt mr-2"></i>
+                                Ownership
+                                <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                            </button>
+                            <div x-show="open" x-cloak class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
+                                <a href="{% url 'ownership' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-amber-50" role="menuitem">Transfer Ownership</a>
+                            </div>
+                        </div>
+
+                        {% if user.is_staff or user.is_superuser %}
+                        <!-- Admin Dropdown -->
+                        <div class="relative" x-data="{ open: false }">
+                            <button @click="open = !open" @click.away="open = false" class="text-gray-500 hover:text-amber-700 px-3 py-2 rounded-md text-sm font-medium inline-flex items-center">
+                                <i class="fas fa-shield-alt mr-2"></i>
+                                Admin
+                                <i class="fas fa-chevron-down ml-1 text-xs"></i>
+                                {% with pending_count=pending_support_requests %}
+                                    {% if pending_count > 0 %}
+                                    <span class="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center ml-1">{{ pending_count }}</span>
+                                    {% endif %}
+                                {% endwith %}
+                            </button>
+                            <div x-show="open" x-cloak class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
+                                <a href="{% url 'user_management' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-amber-50" role="menuitem">
+                                    <i class="fas fa-users-cog mr-2"></i>User Management
+                                </a>
+                                <a href="{% url 'support_requests_list' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-amber-50 relative" role="menuitem">
+                                    <i class="fas fa-ticket-alt mr-2"></i>Support Requests
+                                    {% with pending_count=pending_support_requests %}
+                                        {% if pending_count > 0 %}
+                                        <span class="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center absolute right-4 top-1/2 transform -translate-y-1/2">{{ pending_count }}</span>
+                                        {% endif %}
+                                    {% endwith %}
+                                </a>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                        <!-- Notifications -->
+                        <div class="relative ml-3" x-data="{ open: false }">
+                            <button @click="open = !open" @click.away="open = false" type="button" class="text-gray-600 hover:text-amber-500 flex items-center focus:outline-none relative" id="notification-menu-button" aria-expanded="false" aria-haspopup="true">
+                                <i class="fas fa-bell text-lg"></i>
+                                {% with unread_count=unread_notifications %}
+                                    {% if unread_count > 0 %}
+                                    <span class="absolute top-0 right-0 -mt-1 -mr-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">{{ unread_count }}</span>
+                                    {% endif %}
+                                {% endwith %}
+                            </button>
+                            <!-- Notification dropdown content -->
+                            <div x-show="open" x-cloak class="absolute right-0 z-20 mt-2 w-80 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="notification-menu-button" tabindex="-1">
+                                <!-- Notification items would go here -->
+                                <a href="{% url 'notifications' %}" class="block px-4 py-2 text-sm text-amber-600 border-t border-gray-100 text-center">
+                                    See all notifications
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Profile dropdown -->
+                        <div class="relative ml-3" x-data="{ open: false }">
+                            <button @click="open = !open" @click.away="open = false" type="button" class="flex max-w-xs items-center rounded-full bg-white text-sm focus:outline-none" id="user-menu-button" aria-expanded="false" aria-haspopup="true">
+                                <span class="sr-only">Open user menu</span>
+                                <div class="h-8 w-8 rounded-full bg-amber-200 border border-amber-300 flex items-center justify-center overflow-hidden">
+                                    {% if user.profile_pic %}
+                                        <img src="{{ user.profile_pic.url }}" alt="{{ user.username }}" class="h-8 w-8 object-cover"
+                                            onerror="this.onerror=null; this.src=''; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                        <div class="hidden h-full w-full items-center justify-center">
+                                            <i class="fas fa-user text-amber-600"></i>
+                                        </div>
+                                    {% else %}
+                                        <i class="fas fa-user text-amber-600"></i>
+                                    {% endif %}
+                                </div>
+                            </button>
+                            <div x-show="open" x-cloak class="absolute right-0 z-20 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="user-menu-button" tabindex="-1">
+                                <!-- Profile dropdown items -->
+                                <a href="{% url 'profile' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-amber-50" role="menuitem">Profile</a>
+                                <a href="{% url 'change_password' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-amber-50" role="menuitem">Change Password</a>
+                                <a href="{% url 'update_preferences' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-amber-50" role="menuitem">Preferences</a>
+                                <hr class="my-1 border-amber-100">
+                                <a href="{% url 'logout' %}" class="block px-4 py-2 text-sm text-gray-700 hover:bg-amber-50" role="menuitem">Sign out</a>
+                            </div>
+                        </div>
+                    {% else %}
+                        <!-- Support Link for non-authenticated users -->
+                        <a href="{% url 'support_request' %}" class="text-amber-600 hover:text-amber-800 font-medium px-3 py-2">
+                            <i class="fas fa-life-ring mr-2"></i>Support
+                        </a>
+                        
+                        <!-- Login Button -->
+                        <a href="{% url 'login' %}" class="text-amber-600 hover:text-amber-700 font-medium flex items-center">
+                            <i class="fas fa-sign-in-alt mr-2"></i>
+                            <span>Login</span>
+                        </a>
+                        
+                        <!-- Register Button -->
+                        <a href="{% url 'register' %}" class="bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white px-4 py-2 rounded-lg shadow-sm hover:shadow transition-all font-medium flex items-center">
+                            <i class="fas fa-user-plus mr-2"></i>
+                            <span>Register</span>
+                        </a>
+                    {% endif %}
+                </div>
+
+                <!-- Mobile menu button -->
+                <div class="-mr-2 flex items-center md:hidden">
+                    <button type="button" class="inline-flex items-center justify-center p-2 rounded-md text-amber-600 hover:text-amber-900 hover:bg-amber-50" id="mobile-menu-button" aria-expanded="false">
+                        <span class="sr-only">Open main menu</span>
+                        <!-- Icon when menu is closed -->
+                        <i class="fas fa-bars block h-5 w-5" id="menu-icon-closed"></i>
+                        <!-- Icon when menu is open -->
+                        <i class="fas fa-times hidden h-5 w-5" id="menu-icon-open"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile menu -->
+    <div class="hidden md:hidden bg-white border-t border-amber-100" id="mobile-menu">
+        <div class="px-2 pt-2 pb-3 space-y-1">
+            {% if user.is_authenticated %}
+                <a href="{% url 'home' %}" class="block px-3 py-2 rounded-md text-base font-medium {% if request.resolver_match.url_name == 'home' %}bg-amber-100 text-amber-800{% else %}text-gray-500 hover:bg-amber-50 hover:text-amber-700{% endif %}">
+                    <i class="fas fa-home mr-2"></i>
+                    Home
+                </a>
+                
+                <!-- Animals Section -->
+                <div class="block px-3 py-2 rounded-md text-base font-medium text-gray-500">
+                    <div class="flex justify-between items-center" onclick="toggleMobileSubmenu('animals-submenu')">
+                        <div>
+                            <i class="fas fa-cow mr-2"></i>
+                            Animals
+                        </div>
+                        <i class="fas fa-chevron-down text-xs"></i>
+                    </div>
+                    <div id="animals-submenu" class="hidden pl-5 mt-2 space-y-1">
+                        <a href="{% url 'animal_list' %}" class="block px-3 py-2 rounded-md text-sm {% if request.resolver_match.url_name == 'animal_list' %}bg-amber-50 text-amber-700{% else %}text-gray-500 hover:bg-amber-50 hover:text-amber-700{% endif %}">
+                            <i class="fas fa-list mr-2"></i>View Animals
+                        </a>
+                        <a href="{% url 'add_animal' %}" class="block px-3 py-2 rounded-md text-sm {% if request.resolver_match.url_name == 'add_animal' %}bg-amber-50 text-amber-700{% else %}text-gray-500 hover:bg-amber-50 hover:text-amber-700{% endif %}">
+                            <i class="fas fa-plus mr-2"></i>Add Animal
+                        </a>
+                        <a href="{% url 'health_records' %}" class="block px-3 py-2 rounded-md text-sm {% if request.resolver_match.url_name == 'health_records' %}bg-amber-50 text-amber-700{% else %}text-gray-500 hover:bg-amber-50 hover:text-amber-700{% endif %}">
+                            <i class="fas fa-heartbeat mr-2"></i>Health Records
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Ownership Section -->
+                <div class="block px-3 py-2 rounded-md text-base font-medium text-gray-500">
+                    <div class="flex justify-between items-center" onclick="toggleMobileSubmenu('ownership-submenu')">
+                        <div>
+                            <i class="fas fa-exchange-alt mr-2"></i>
+                            Ownership
+                        </div>
+                        <i class="fas fa-chevron-down text-xs"></i>
+                    </div>
+                    <div id="ownership-submenu" class="hidden pl-5 mt-2 space-y-1">
+                        <a href="{% url 'ownership' %}" class="block px-3 py-2 rounded-md text-sm {% if request.resolver_match.url_name == 'ownership' %}bg-amber-50 text-amber-700{% else %}text-gray-500 hover:bg-amber-50 hover:text-amber-700{% endif %}">
+                            <i class="fas fa-paper-plane mr-2"></i>Transfer Ownership
+                        </a>
+                    </div>
+                </div>
+                
+                {% if user.is_staff or user.is_superuser %}
+                <!-- Admin Section -->
+                <div class="block px-3 py-2 rounded-md text-base font-medium text-gray-500">
+                    <div class="flex justify-between items-center" onclick="toggleMobileSubmenu('admin-submenu')">
+                        <div class="flex items-center">
+                            <i class="fas fa-shield-alt mr-2"></i>
+                            Admin
+                            {% with pending_count=pending_support_requests %}
+                                {% if pending_count > 0 %}
+                                <span class="bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center ml-1">{{ pending_count }}</span>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                        <i class="fas fa-chevron-down text-xs"></i>
+                    </div>
+                    <div id="admin-submenu" class="hidden pl-5 mt-2 space-y-1">
+                        <a href="{% url 'user_management' %}" class="block px-3 py-2 rounded-md text-sm {% if request.resolver_match.url_name == 'user_management' %}bg-amber-50 text-amber-700{% else %}text-gray-500 hover:bg-amber-50 hover:text-amber-700{% endif %}">
+                            <i class="fas fa-users-cog mr-2"></i>User Management
+                        </a>
+                        <a href="{% url 'support_requests_list' %}" class="block px-3 py-2 rounded-md text-sm {% if request.resolver_match.url_name == 'support_requests_list' %}bg-amber-50 text-amber-700{% else %}text-gray-500 hover:bg-amber-50 hover:text-amber-700{% endif %}">
+                            <i class="fas fa-ticket-alt mr-2"></i>Support Requests
+                            {% with pending_count=pending_support_requests %}
+                                {% if pending_count > 0 %}
+                                <span class="ml-1 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none text-red-100 bg-red-600 rounded-full">{{ pending_count }}</span>
+                                {% endif %}
+                            {% endwith %}
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <!-- Profile Section -->
+                <div class="block px-3 py-2 rounded-md text-base font-medium text-gray-500">
+                    <div class="flex justify-between items-center" onclick="toggleMobileSubmenu('profile-submenu')">
+                        <div>
+                            <i class="fas fa-user mr-2"></i>
+                            My Account
+                        </div>
+                        <i class="fas fa-chevron-down text-xs"></i>
+                    </div>
+                    <div id="profile-submenu" class="hidden pl-5 mt-2 space-y-1">
+                        <a href="{% url 'profile' %}" class="block px-3 py-2 rounded-md text-sm {% if request.resolver_match.url_name == 'profile' %}bg-amber-50 text-amber-700{% else %}text-gray-500 hover:bg-amber-50 hover:text-amber-700{% endif %}">
+                            <i class="fas fa-user-circle mr-2"></i>Profile
+                        </a>
+                        <a href="{% url 'change_password' %}" class="block px-3 py-2 rounded-md text-sm {% if request.resolver_match.url_name == 'change_password' %}bg-amber-50 text-amber-700{% else %}text-gray-500 hover:bg-amber-50 hover:text-amber-700{% endif %}">
+                            <i class="fas fa-key mr-2"></i>Change Password
+                        </a>
+                        <a href="{% url 'update_preferences' %}" class="block px-3 py-2 rounded-md text-sm {% if request.resolver_match.url_name == 'update_preferences' %}bg-amber-50 text-amber-700{% else %}text-gray-500 hover:bg-amber-50 hover:text-amber-700{% endif %}">
+                            <i class="fas fa-cog mr-2"></i>Preferences
+                        </a>
+                        <a href="{% url 'logout' %}" class="block px-3 py-2 rounded-md text-sm text-red-600 hover:bg-red-50">
+                            <i class="fas fa-sign-out-alt mr-2"></i>Sign out
+                        </a>
+                    </div>
+                </div>
+            {% else %}
+                <a href="{% url 'support_request' %}" class="block px-3 py-2 rounded-md text-base font-medium {% if request.resolver_match.url_name == 'support_request' %}bg-amber-100 text-amber-800{% else %}text-gray-500 hover:bg-amber-50 hover:text-amber-700{% endif %}">
+                    <i class="fas fa-life-ring mr-2"></i>
+                    Support
+                </a>
+                <a href="{% url 'login' %}" class="block px-3 py-2 rounded-md text-base font-medium {% if request.resolver_match.url_name == 'login' %}bg-amber-100 text-amber-800{% else %}text-gray-500 hover:bg-amber-50 hover:text-amber-700{% endif %}">
+                    <i class="fas fa-sign-in-alt mr-2"></i>
+                    Login
+                </a>
+                <a href="{% url 'register' %}" class="block px-3 py-2 rounded-md text-base font-medium bg-gradient-to-r from-amber-500 to-amber-600 text-white">
+                    <i class="fas fa-user-plus mr-2"></i>
+                    Register
+                </a>
+            {% endif %}
+        </div>
+    </div>
+</header>
+
+<!-- Spacer to prevent content from being hidden behind fixed header -->
+<div class="h-16 w-full"></div>
+
+<!-- Script to handle mobile menu toggle and submenus -->
+<script src="https://cdn.jsdelivr.net/npm/alpinejs@2.8.2/dist/alpine.min.js" defer></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+        const menuIconClosed = document.getElementById('menu-icon-closed');
+        const menuIconOpen = document.getElementById('menu-icon-open');
+        
+        mobileMenuButton.addEventListener('click', function() {
+            mobileMenu.classList.toggle('hidden');
+            menuIconClosed.classList.toggle('hidden');
+            menuIconOpen.classList.toggle('hidden');
+        });
+        
+        // Enhanced navbar scroll effect with glassmorphism
+        const navbarContainer = document.getElementById('navbar-container');
+        const navbar = document.getElementById('main-navbar');
+        
+        const handleScroll = () => {
+            if (window.scrollY > 10) {
+                // When scrolled: transparent with blur effect
+                navbar.classList.remove('bg-white', 'bg-opacity-70');
+                navbar.classList.add('bg-white/40', 'backdrop-blur-md', 'shadow-md');
+            } else {
+                // At top: solid white background
+                navbar.classList.remove('bg-white/40', 'backdrop-blur-md', 'shadow-md');
+                navbar.classList.add('bg-white', 'bg-opacity-70');
+            }
+        };
+        
+        window.addEventListener('scroll', handleScroll);
+        handleScroll(); // Initialize on page load
+        
+        // Add this style to hide x-cloak elements
+        document.head.insertAdjacentHTML('beforeend', `
+            <style>
+                [x-cloak] { 
+                    display: none !important; 
+                }
+            </style>
+        `);
+        
+        function toggleMobileSubmenu(id) {
+            const submenu = document.getElementById(id);
+            if (submenu) {
+                submenu.classList.toggle('hidden');
+            }
+        }
+    });
+</script>

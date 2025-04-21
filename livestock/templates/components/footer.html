@@ -1,0 +1,158 @@
+{% load static %}
+<!-- Footer with curved top -->
+<footer class="relative w-full">
+    <!-- Enhanced Curved top shape with greater height for more pronounced curve -->
+    <div class="absolute top-0 left-0 right-0 w-full overflow-hidden" style="height: 8rem; transform: translateY(-98%);">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 320" preserveAspectRatio="none" class="w-full h-full">
+            <path fill="#FFFBEB" fill-opacity="1" d="M0,192L48,176C96,160,192,128,288,122.7C384,117,480,139,576,144C672,149,768,139,864,149.3C960,160,1056,192,1152,197.3C1248,203,1344,181,1392,170.7L1440,160L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z"></path>
+        </svg>
+    </div>
+
+    <!-- Footer content -->
+    <div class="bg-amber-50">
+        <div class="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 pt-16 pb-12">
+            <!-- Footer grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+                <!-- Logo and about section -->
+                <div class="space-y-4">
+                    <div class="flex items-center">
+                        <div class="h-12 w-12 bg-amber-100 rounded-full flex items-center justify-center mr-3">
+                            <span class="text-amber-600 text-xl font-bold">LM</span>
+                        </div>
+                        <span class="text-xl font-bold text-amber-900">Livestock Manager</span>
+                    </div>
+                    <p class="text-gray-600 text-sm mt-2">
+                        Modern solution for livestock management, helping farmers track, monitor, and optimize their livestock operations.
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-amber-600 hover:text-amber-800">
+                            <i class="fab fa-facebook-f"></i>
+                            <span class="sr-only">Facebook</span>
+                        </a>
+                        <a href="#" class="text-amber-600 hover:text-amber-800">
+                            <i class="fab fa-twitter"></i>
+                            <span class="sr-only">Twitter</span>
+                        </a>
+                        <a href="#" class="text-amber-600 hover:text-amber-800">
+                            <i class="fab fa-instagram"></i>
+                            <span class="sr-only">Instagram</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick links -->
+                <div>
+                    <h3 class="text-lg font-semibold text-amber-900 mb-4">Quick Links</h3>
+                    <ul class="space-y-2">
+                        <li><a href="{% url 'home' %}" class="text-gray-600 hover:text-amber-700">Home</a></li>
+                        <li><a href="{% url 'animal_list' %}" class="text-gray-600 hover:text-amber-700">Animals</a></li>
+                        <li><a href="{% url 'health_records' %}" class="text-gray-600 hover:text-amber-700">Health Records</a></li>
+                        <li><a href="{% url 'support_request' %}" class="text-gray-600 hover:text-amber-700">Support</a></li>
+                    </ul>
+                </div>
+
+                <!-- Legal links -->
+                <div>
+                    <h3 class="text-lg font-semibold text-amber-900 mb-4">Legal</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-600 hover:text-amber-700">Privacy Policy</a></li>
+                        <li><a href="#" class="text-gray-600 hover:text-amber-700">Terms of Service</a></li>
+                        <li><a href="#" class="text-gray-600 hover:text-amber-700">Cookie Policy</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact info -->
+                <div>
+                    <h3 class="text-lg font-semibold text-amber-900 mb-4">Contact Us</h3>
+                    <ul class="space-y-3">
+                        <li class="flex items-start">
+                            <i class="fas fa-map-marker-alt text-amber-600 mt-1 mr-2"></i>
+                            <span class="text-gray-600">123 Farm Road, Agriculture District, Country</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-phone text-amber-600 mr-2"></i>
+                            <span class="text-gray-600">+1 (123) 456-7890</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fas fa-envelope text-amber-600 mr-2"></i>
+                            <span class="text-gray-600">info@livestockmanager.com</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Copyright -->
+            <div class="border-t border-amber-200 mt-12 pt-8 text-center text-gray-600 text-sm">
+                <p>&copy; {% now "Y" %} Livestock Manager. All rights reserved.</p>
+                
+                <!-- Developer Credit - Creative Version -->
+                <div class="mt-4 relative developer-credit" data-redirect="https://enally.in">
+                    <div class="flex justify-center items-center">
+                        <div class="h-px w-1/4 bg-gradient-to-r from-transparent to-amber-200"></div>
+                        <div class="px-4 relative group">
+                            <div class="flex items-center justify-center space-x-2">
+                                <div class="text-xs text-gray-400 group-hover:text-amber-500 transition-colors duration-300">
+                                    Crafted with
+                                </div>
+                                <div class="relative">
+                                    <i class="fas fa-heart text-amber-400 animate-pulse absolute opacity-0 group-hover:opacity-100 transition-opacity duration-300" 
+                                       style="transform: translate(-50%, -50%); top: 50%; left: 50%;"></i>
+                                    <i class="fas fa-code text-amber-400 absolute opacity-100 group-hover:opacity-0 transition-opacity duration-300"
+                                       style="transform: translate(-50%, -50%); top: 50%; left: 50%;"></i>
+                                    <span class="inline-block w-5 h-5"></span>
+                                </div>
+                                <div class="text-xs">
+                                    by 
+                                    <a href="https://www.linkedin.com/in/03prashantpk" target="_blank" rel="noopener noreferrer" 
+                                       class="text-amber-500 hover:text-amber-600 font-medium inline-flex items-center space-x-1 group-hover:underline">
+                                        <span>Prashant Kumar</span>
+                                        <i class="fas fa-external-link-alt text-[0.6rem] opacity-0 group-hover:opacity-100 transition-opacity"></i>
+                                    </a>
+                                </div>
+                            </div>
+                            
+                            <!-- Hidden easter egg - appears on hover -->
+                            <div class="absolute left-1/2 transform -translate-x-1/2 -bottom-1 opacity-0 group-hover:opacity-100 transition-all duration-300 bg-amber-50 px-2 py-1 rounded text-[0.65rem] text-amber-600 whitespace-nowrap">
+                                <i class="fas fa-star text-amber-400 mr-1"></i>Full-stack Developer & UI Designer
+                            </div>
+                        </div>
+                        <div class="h-px w-1/4 bg-gradient-to-r from-amber-200 to-transparent"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- Add the developer credit observer script -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Developer credit redirect functionality
+        const developerCredit = document.querySelector('.developer-credit');
+        if (developerCredit) {
+            // Store the original structure for reference
+            const originalHTML = developerCredit.innerHTML;
+            
+            // Check if someone tries to remove or modify the credit
+            const observer = new MutationObserver(function(mutations) {
+                const currentHTML = developerCredit.innerHTML;
+                if (currentHTML !== originalHTML || 
+                    developerCredit.style.display === 'none' || 
+                    developerCredit.offsetHeight === 0 ||
+                    window.getComputedStyle(developerCredit).opacity === '0' ||
+                    window.getComputedStyle(developerCredit).visibility === 'hidden') {
+                    // If element is removed, hidden or modified, redirect
+                    window.location.href = developerCredit.dataset.redirect;
+                }
+            });
+            
+            // Configure and start the observer
+            observer.observe(developerCredit, {
+                childList: true,
+                attributes: true,
+                characterData: true,
+                subtree: true
+            });
+        }
+    });
+</script>

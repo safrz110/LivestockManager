@@ -1,0 +1,155 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .max-w-8xl {
+        max-width: 90rem; /* 1440px */
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .notification-item {
+        transition: all 0.3s ease;
+    }
+    
+    .notification-item:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    
+    .notification-item.unread {
+        border-left: 4px solid rgb(245, 158, 11);
+    }
+    
+    .notification-item.read {
+        border-left: 4px solid transparent;
+        opacity: 0.8;
+    }
+</style>
+
+<div class="relative py-12 min-h-[80vh]">
+    <!-- Background Elements -->
+    <div class="absolute inset-0 z-0">
+        <div class="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-amber-600/5 to-transparent"></div>
+    </div>
+    
+    <!-- Animated Background Elements -->
+    <div class="absolute inset-0 z-0 overflow-hidden">
+        <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-amber-400/5 rounded-full blur-3xl animate-pulse"></div>
+        <div class="absolute bottom-1/3 right-1/3 w-72 h-72 bg-blue-500/5 rounded-full blur-3xl animate-pulse" style="animation-delay: 2s;"></div>
+    </div>
+    
+    <div class="max-w-8xl mx-auto px-4 z-10 relative">
+        <!-- Header with glassmorphism -->
+        <div class="backdrop-blur-md bg-white/60 p-6 rounded-xl border border-white/20 shadow-lg mb-8" data-aos="fade-up">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <div class="bg-amber-100 p-3 rounded-full mr-4">
+                        <i class="fas fa-bell text-amber-600 text-xl"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-amber-900">Notifications</h1>
+                </div>
+                {% if notifications %}
+                <form action="{% url 'mark_all_read' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="text-amber-600 hover:text-amber-800 font-medium flex items-center">
+                        <i class="fas fa-check-double mr-2"></i>
+                        Mark All as Read
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- Notifications List -->
+        <div class="space-y-4">
+            {% for notification in notifications %}
+                <div class="notification-item backdrop-blur-lg bg-white/90 p-4 rounded-xl border border-white/20 shadow-lg {% if notification.is_read %}read{% else %}unread{% endif %}" data-aos="fade-up" data-aos-delay="{{ forloop.counter|add:50 }}">
+                    <div class="flex justify-between items-start">
+                        <div class="flex-grow">
+                            <p class="text-gray-700">{{ notification.message }}</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ notification.created_at|date:"M d, Y - h:i A" }}</p>
+                        </div>
+                        <div class="ml-4 flex items-center space-x-3">
+                            {% if notification.link %}
+                            <a href="{{ notification.link }}" class="text-amber-600 hover:text-amber-800">
+                                <i class="fas fa-external-link-alt"></i>
+                            </a>
+                            {% endif %}
+                            
+                            {% if not notification.is_read %}
+                            <button type="button" class="text-amber-600 hover:text-amber-800 mark-read-btn" data-id="{{ notification.id }}">
+                                <i class="fas fa-check"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="text-center py-20 backdrop-blur-lg bg-white/90 rounded-xl border border-white/20 shadow-lg" data-aos="fade-up">
+                    <div class="bg-amber-50 h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-bell-slash text-amber-400 text-3xl"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-amber-900 mb-2">No Notifications</h3>
+                    <p class="text-gray-500">You don't have any notifications at the moment.</p>
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize animations if AOS is available
+        if (typeof AOS !== 'undefined') {
+            AOS.refresh();
+        }
+        
+        // Handle marking notifications as read
+        const markReadButtons = document.querySelectorAll('.mark-read-btn');
+        markReadButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const notificationId = this.dataset.id;
+                const notificationItem = this.closest('.notification-item');
+                
+                // Create form data
+                const formData = new FormData();
+                formData.append('notification_id', notificationId);
+                formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+                
+                // Send AJAX request
+                fetch('{% url "mark_notification_read" %}', {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update UI
+                        notificationItem.classList.remove('unread');
+                        notificationItem.classList.add('read');
+                        button.remove();
+                        
+                        // Update notification count in navbar
+                        const navbarNotifCount = document.querySelector('.notification-count');
+                        if (navbarNotifCount) {
+                            const currentCount = parseInt(navbarNotifCount.textContent);
+                            if (currentCount > 1) {
+                                navbarNotifCount.textContent = currentCount - 1;
+                            } else {
+                                navbarNotifCount.style.display = 'none';
+                            }
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error marking notification as read:', error);
+                });
+            });
+        });
+    });
+</script>
+{% endblock %}

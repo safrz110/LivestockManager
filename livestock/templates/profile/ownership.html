@@ -1,0 +1,557 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .max-w-8xl {
+        max-width: 90rem; /* 1440px */
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .form-input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        background-color: white;
+        border: 1px solid rgb(253, 230, 138);
+        border-radius: 0.5rem;
+        outline: none;
+        transition: all 0.2s;
+    }
+    
+    .form-input:focus {
+        border-color: rgb(245, 158, 11);
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+    }
+    
+    .input-icon {
+        position: absolute;
+        top: 50%;
+        left: 0.75rem;
+        transform: translateY(-50%);
+        color: rgb(156, 163, 175);
+        pointer-events: none;
+    }
+    
+    .transfer-card {
+        transition: all 0.3s ease;
+    }
+    
+    .transfer-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+</style>
+
+<div class="relative py-12 min-h-[80vh]">
+    <!-- Background Elements -->
+    <div class="absolute inset-0 z-0">
+        <div class="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-amber-600/5 to-transparent"></div>
+    </div>
+    
+    <!-- Animated Background Elements -->
+    <div class="absolute inset-0 z-0 overflow-hidden">
+        <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-amber-400/5 rounded-full blur-3xl animate-pulse"></div>
+        <div class="absolute bottom-1/3 right-1/3 w-72 h-72 bg-blue-500/5 rounded-full blur-3xl animate-pulse" style="animation-delay: 2s;"></div>
+    </div>
+    
+    <div class="max-w-8xl mx-auto px-4 z-10 relative">
+        <!-- Header with glassmorphism -->
+        <div class="backdrop-blur-md bg-white/60 p-6 rounded-xl border border-white/20 shadow-lg mb-8" data-aos="fade-up">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <div class="bg-amber-100 p-3 rounded-full mr-4">
+                        <i class="fas fa-exchange-alt text-amber-600 text-xl"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-amber-900">Transfer Ownership</h1>
+                </div>
+                <a href="{% url 'profile' %}" class="text-amber-600 hover:text-amber-800 font-medium flex items-center">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Profile
+                </a>
+            </div>
+        </div>
+        
+        <!-- Main content -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <!-- Left card - Transfer Request -->
+            <div class="col-span-1 md:col-span-2 backdrop-blur-lg bg-white/90 p-8 rounded-xl border border-white/20 shadow-lg" data-aos="fade-up">
+                <h2 class="text-xl font-bold text-amber-900 mb-6">
+                    <i class="fas fa-paper-plane mr-2"></i>
+                    Request Transfer
+                </h2>
+                
+                <form method="post" class="space-y-6" id="transfer-form">
+                    {% csrf_token %}
+                    
+                    <!-- Select Animal -->
+                    <div class="space-y-2">
+                        <label for="animal" class="block text-sm font-medium text-amber-900">Select Animal</label>
+                        <select id="animal" name="animal" class="form-input" required>
+                            <option value="" disabled selected>Select an animal to transfer</option>
+                            {% if animals %}
+                                {% for animal in animals %}
+                                    <option value="{{ animal.id }}">{{ animal.tag_number }} - {{ animal.species }} {% if animal.breed %}({{ animal.breed }}){% endif %}</option>
+                                {% endfor %}
+                            {% else %}
+                                <option value="" disabled>No animals available for transfer</option>
+                            {% endif %}
+                        </select>
+                        <p class="text-xs text-gray-500">Only animals you own are displayed here.</p>
+                    </div>
+                    
+                    <!-- Recipient Username/Email -->
+                    <div class="space-y-2">
+                        <label for="recipient_identifier" class="block text-sm font-medium text-amber-900">Recipient Username or Email</label>
+                        <div class="flex space-x-2">
+                            <div class="relative flex-grow">
+                                <span class="input-icon">
+                                    <i class="fas fa-user"></i>
+                                </span>
+                                <input type="text" id="recipient_identifier" name="recipient_identifier" placeholder="Enter username or email" required class="form-input">
+                                <input type="hidden" id="recipient_id" name="recipient_id">
+                                <input type="hidden" id="recipient_email" name="recipient_email">
+                            </div>
+                            <button type="button" id="fetch-user-btn" class="px-4 py-2 bg-amber-100 border border-amber-200 text-amber-700 rounded-lg hover:bg-amber-200 transition-colors">
+                                <i class="fas fa-search"></i>
+                                Verify
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500">The recipient must have an account to receive the transfer.</p>
+                    </div>
+                    
+                    <!-- User Information (Hidden until fetched) -->
+                    <div id="user-info-container" class="hidden p-4 border border-amber-200 rounded-lg bg-amber-50">
+                        <div class="flex items-center">
+                            <div class="h-12 w-12 bg-amber-100 rounded-full flex items-center justify-center mr-4">
+                                <i class="fas fa-user text-amber-500" id="user-icon"></i>
+                                <img id="user-image" class="h-full w-full object-cover rounded-full hidden">
+                            </div>
+                            <div>
+                                <h3 class="font-medium text-amber-900" id="user-name">User not found</h3>
+                                <p class="text-sm text-amber-700" id="user-email"></p>
+                            </div>
+                            <div class="ml-auto">
+                                <span id="user-verification-badge" class="hidden px-2 py-1 text-xs font-medium rounded-full">Verified</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Message -->
+                    <div class="space-y-2">
+                        <label for="message" class="block text-sm font-medium text-amber-900">Message (Optional)</label>
+                        <textarea id="message" name="message" rows="3" class="w-full p-3 border border-amber-200 rounded-lg focus:border-amber-500 focus:ring focus:ring-amber-200 outline-none" placeholder="Include a message with the transfer request"></textarea>
+                        <p class="text-xs text-gray-500">This message will be included in the transfer notification.</p>
+                    </div>
+                    
+                    <div class="bg-amber-50 border-l-4 border-amber-500 p-4 text-amber-700">
+                        <div class="flex">
+                            <div class="flex-shrink-0">
+                                <i class="fas fa-exclamation-triangle"></i>
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm">
+                                    After the transfer is complete, you will no longer have access to this animal's records. This action cannot be undone.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="pt-4 flex justify-end">
+                        <button type="submit" id="submit-transfer" class="px-6 py-3 bg-gradient-to-r from-amber-400 to-amber-500 text-white font-medium rounded-lg shadow-md hover:shadow-lg hover:from-amber-500 hover:to-amber-600 transition-all transform hover:-translate-y-0.5 duration-300 disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            <i class="fas fa-paper-plane mr-2"></i>
+                            Send Transfer Request
+                        </button>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Right side - Pending Transfers -->
+            <div class="backdrop-blur-lg bg-white/90 p-8 rounded-xl border border-white/20 shadow-lg h-fit" data-aos="fade-up" data-aos-delay="100">
+                <h2 class="text-xl font-bold text-amber-900 mb-6">
+                    <i class="fas fa-clock mr-2"></i>
+                    Pending Transfers
+                </h2>
+                
+                <div class="space-y-4">
+                    {% for transfer in pending_transfers %}
+                        <div class="transfer-card bg-white border border-amber-100 rounded-lg p-4 shadow-sm">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <span class="text-xs font-medium text-amber-600">{{ transfer.created_at|date:"M d, Y" }}</span>
+                                    <h3 class="font-medium text-gray-900">{{ transfer.animal.tag_number }}</h3>
+                                    <p class="text-sm text-gray-600">To: {{ transfer.recipient_email }}</p>
+                                </div>
+                                <span class="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Pending</span>
+                            </div>
+                            <div class="mt-3 flex justify-end space-x-2">
+                                <form action="{% url 'process_transfer' transfer.id 'cancel' %}" method="post" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="text-gray-500 hover:text-gray-700">
+                                        <i class="fas fa-times"></i> Cancel
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="text-center py-6">
+                            <div class="bg-amber-50 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <i class="fas fa-check text-amber-400 text-xl"></i>
+                            </div>
+                            <p class="text-gray-500">No pending transfer requests</p>
+                        </div>
+                    {% endfor %}
+                </div>
+                
+                <hr class="my-6 border-amber-100">
+                
+                <h2 class="text-xl font-bold text-amber-900 mb-4">
+                    <i class="fas fa-inbox mr-2"></i>
+                    Incoming Transfers
+                </h2>
+                
+                <div class="space-y-4">
+                    {% for transfer in incoming_transfers %}
+                        <div class="transfer-card bg-white border border-amber-100 rounded-lg p-4 shadow-sm">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <span class="text-xs font-medium text-amber-600">{{ transfer.created_at|date:"M d, Y" }}</span>
+                                    <h3 class="font-medium text-gray-900">{{ transfer.animal.tag_number }}</h3>
+                                    <p class="text-sm text-gray-600">From: {{ transfer.sender.name }}</p>
+                                </div>
+                                <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Received</span>
+                            </div>
+                            {% if transfer.message %}
+                                <div class="mt-2 p-2 bg-gray-50 rounded text-sm">
+                                    <i class="fas fa-quote-left text-gray-300 mr-1"></i>
+                                    {{ transfer.message }}
+                                </div>
+                            {% endif %}
+                            <div class="mt-3 flex justify-end space-x-2">
+                                <form action="{% url 'process_transfer' transfer.id 'accept' %}" method="post" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="text-green-600 hover:text-green-800">
+                                        <i class="fas fa-check"></i> Accept
+                                    </button>
+                                </form>
+                                <form action="{% url 'process_transfer' transfer.id 'reject' %}" method="post" class="inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="text-red-600 hover:text-red-800">
+                                        <i class="fas fa-times"></i> Decline
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="text-center py-6">
+                            <div class="bg-amber-50 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <i class="fas fa-inbox text-amber-400 text-xl"></i>
+                            </div>
+                            <p class="text-gray-500">No incoming transfer requests</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Transfer History Section -->
+        <div class="mt-8 backdrop-blur-lg bg-white/90 p-8 rounded-xl border border-white/20 shadow-lg" data-aos="fade-up" data-aos-delay="150">
+            <h2 class="text-xl font-bold text-amber-900 mb-6">
+                <i class="fas fa-history mr-2"></i>
+                Transfer History
+            </h2>
+            
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-amber-200">
+                    <thead class="bg-amber-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-amber-700 uppercase tracking-wider">Date</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-amber-700 uppercase tracking-wider">Animal</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-amber-700 uppercase tracking-wider">Transfer Type</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-amber-700 uppercase tracking-wider">From/To</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-amber-700 uppercase tracking-wider">Status</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-amber-700 uppercase tracking-wider">Details</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-amber-100">
+                        {% for transfer in transfer_history %}
+                            <tr class="hover:bg-amber-50/50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{{ transfer.completed_date|date:"M d, Y" }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <div class="flex items-center">
+                                        <span class="bg-amber-100 w-8 h-8 rounded-full flex items-center justify-center mr-3">
+                                            <i class="fas fa-tag text-amber-600"></i>
+                                        </span>
+                                        <div>
+                                            <div class="font-medium text-gray-900">{{ transfer.animal.tag_number }}</div>
+                                            <div class="text-xs text-gray-500">{{ transfer.animal.species }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {% if transfer.sender == request.user.owner %}
+                                        <span class="text-amber-600 flex items-center">
+                                            <i class="fas fa-arrow-right mr-1"></i> 
+                                            <span>Sent</span>
+                                        </span>
+                                    {% else %}
+                                        <span class="text-green-600 flex items-center">
+                                            <i class="fas fa-arrow-left mr-1"></i> 
+                                            <span>Received</span>
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {% if transfer.sender == request.user.owner %}
+                                        <div class="flex items-center">
+                                            <span class="text-xs text-gray-500 mr-1">To:</span>
+                                            <span>{{ transfer.recipient.name }}</span>
+                                        </div>
+                                    {% else %}
+                                        <div class="flex items-center">
+                                            <span class="text-xs text-gray-500 mr-1">From:</span>
+                                            <span>{{ transfer.sender.name }}</span>
+                                        </div>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap">
+                                    <span class="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full">Completed</span>
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                    <button type="button" class="text-amber-500 hover:text-amber-700" 
+                                            onclick="showTransferDetails('{{ transfer.id }}', '{{ transfer.animal.tag_number }}', '{{ transfer.completed_date|date:'M d, Y' }}', '{{ transfer.sender.name }}', '{{ transfer.recipient.name }}', '{{ transfer.message|escapejs }}')">
+                                        <i class="fas fa-info-circle"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="6" class="px-6 py-10 text-center text-gray-500">
+                                    <div class="flex flex-col items-center">
+                                        <div class="bg-amber-50 h-20 w-20 rounded-full flex items-center justify-center mb-3">
+                                            <i class="fas fa-history text-amber-300 text-2xl"></i>
+                                        </div>
+                                        <p>No transfer history available</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Transfer Details Modal (hidden by default) -->
+        <div id="transfer-details-modal" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+            <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-md transform transition-all">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-amber-900">Transfer Details</h3>
+                    <button type="button" class="text-gray-400 hover:text-gray-500" onclick="closeTransferModal()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="space-y-4">
+                    <div class="flex flex-col items-center py-4">
+                        <div class="bg-amber-100 w-16 h-16 rounded-full flex items-center justify-center mb-3">
+                            <i class="fas fa-exchange-alt text-amber-600 text-2xl"></i>
+                        </div>
+                        <h4 class="text-lg font-medium text-gray-900" id="modal-tag-number">LV-1234</h4>
+                        <p class="text-sm text-gray-500" id="modal-date">Jan 15, 2025</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-gray-50 rounded-lg p-3">
+                            <p class="text-xs text-gray-500">From</p>
+                            <p class="font-medium" id="modal-sender">John Doe</p>
+                        </div>
+                        <div class="bg-gray-50 rounded-lg p-3">
+                            <p class="text-xs text-gray-500">To</p>
+                            <p class="font-medium" id="modal-recipient">Jane Smith</p>
+                        </div>
+                    </div>
+                    
+                    <div id="modal-message-container" class="bg-gray-50 rounded-lg p-4 border-l-4 border-amber-500">
+                        <p class="text-xs text-gray-500 mb-1">Message</p>
+                        <p id="modal-message" class="text-gray-700">No message provided</p>
+                    </div>
+                </div>
+                <div class="mt-6">
+                    <button type="button" class="w-full py-2 bg-gradient-to-r from-amber-400 to-amber-500 text-white rounded-lg font-medium" onclick="closeTransferModal()">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize animations if AOS is available
+        if (typeof AOS !== 'undefined') {
+            AOS.refresh();
+        }
+        
+        // User verification functionality
+        const fetchUserBtn = document.getElementById('fetch-user-btn');
+        const userIdentifierInput = document.getElementById('recipient_identifier');
+        const userInfoContainer = document.getElementById('user-info-container');
+        const userIcon = document.getElementById('user-icon');
+        const userImage = document.getElementById('user-image');
+        const userName = document.getElementById('user-name');
+        const userEmail = document.getElementById('user-email');
+        const userVerificationBadge = document.getElementById('user-verification-badge');
+        const recipientIdField = document.getElementById('recipient_id');
+        const recipientEmailField = document.getElementById('recipient_email');
+        const submitTransferBtn = document.getElementById('submit-transfer');
+        
+        if (fetchUserBtn) {
+            fetchUserBtn.addEventListener('click', function() {
+                const identifier = userIdentifierInput.value.trim();
+                
+                if (!identifier) {
+                    showUserNotFound();
+                    return;
+                }
+                
+                // Show loading state
+                fetchUserBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Verifying...';
+                fetchUserBtn.disabled = true;
+                
+                // Make AJAX request to find user
+                fetch(`/api/find-user/?identifier=${encodeURIComponent(identifier)}`, {
+                    method: 'GET',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Reset button state
+                    fetchUserBtn.innerHTML = '<i class="fas fa-search"></i> Verify';
+                    fetchUserBtn.disabled = false;
+                    
+                    // Show user info container
+                    userInfoContainer.classList.remove('hidden');
+                    
+                    if (data.found) {
+                        // User found
+                        userName.textContent = data.name || data.username;
+                        userEmail.textContent = data.email;
+                        
+                        // Store recipient ID and email in hidden fields
+                        recipientIdField.value = data.id;
+                        recipientEmailField.value = data.email;
+                        
+                        // Update verification badge
+                        userVerificationBadge.classList.remove('hidden', 'bg-red-100', 'text-red-800');
+                        userVerificationBadge.classList.add('bg-green-100', 'text-green-800');
+                        userVerificationBadge.textContent = 'Verified';
+                        
+                        // Show profile picture if available
+                        if (data.profile_pic) {
+                            userIcon.classList.add('hidden');
+                            userImage.classList.remove('hidden');
+                            userImage.src = data.profile_pic;
+                            
+                            // Add error handler for image loading failures
+                            userImage.onerror = function() {
+                                this.onerror = null;
+                                this.classList.add('hidden');
+                                userIcon.classList.remove('hidden');
+                            };
+                        } else {
+                            userIcon.classList.remove('hidden');
+                            userImage.classList.add('hidden');
+                        }
+                        
+                        // Enable submit button
+                        submitTransferBtn.disabled = false;
+                    } else {
+                        showUserNotFound();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error fetching user:', error);
+                    fetchUserBtn.innerHTML = '<i class="fas fa-search"></i> Verify';
+                    fetchUserBtn.disabled = false;
+                    showUserNotFound();
+                });
+            });
+        }
+        
+        function showUserNotFound() {
+            userInfoContainer.classList.remove('hidden');
+            userName.textContent = 'User not found';
+            userEmail.textContent = 'No matching user with this username or email';
+            userIcon.classList.remove('hidden');
+            userImage.classList.add('hidden');
+            
+            // Update verification badge
+            userVerificationBadge.classList.remove('hidden', 'bg-green-100', 'text-green-800');
+            userVerificationBadge.classList.add('bg-red-100', 'text-red-800');
+            userVerificationBadge.textContent = 'Not Found';
+            
+            // Clear recipient fields
+            recipientIdField.value = '';
+            recipientEmailField.value = '';
+            
+            // Disable submit button
+            submitTransferBtn.disabled = true;
+        }
+        
+        // Form submission validation
+        const transferForm = document.getElementById('transfer-form');
+        if (transferForm) {
+            transferForm.addEventListener('submit', function(e) {
+                const animalSelect = document.getElementById('animal');
+                
+                if (!animalSelect.value) {
+                    e.preventDefault();
+                    alert('Please select an animal to transfer.');
+                    return;
+                }
+                
+                if (!recipientIdField.value) {
+                    e.preventDefault();
+                    alert('Please verify a recipient user first.');
+                    return;
+                }
+            });
+        }
+
+        // Add debug information
+        console.log('Animals count:', {{ animals|length }});
+        console.log('Pending transfers:', {{ pending_transfers|length }});
+        console.log('Incoming transfers:', {{ incoming_transfers|length }});
+        console.log('Transfer history:', {{ transfer_history|length }});
+    });
+    
+    // Transfer details modal functions
+    function showTransferDetails(id, tagNumber, date, sender, recipient, message) {
+        document.getElementById('modal-tag-number').textContent = tagNumber;
+        document.getElementById('modal-date').textContent = date;
+        document.getElementById('modal-sender').textContent = sender;
+        document.getElementById('modal-recipient').textContent = recipient;
+        
+        const messageContainer = document.getElementById('modal-message-container');
+        const messageElement = document.getElementById('modal-message');
+        
+        if (message && message.trim() !== '') {
+            messageElement.textContent = message;
+            messageContainer.classList.remove('hidden');
+        } else {
+            messageElement.textContent = 'No message provided';
+            messageContainer.classList.add('hidden');
+        }
+        
+        document.getElementById('transfer-details-modal').classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+    }
+    
+    function closeTransferModal() {
+        document.getElementById('transfer-details-modal').classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }
+</script>
+{% endblock %}

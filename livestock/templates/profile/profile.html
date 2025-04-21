@@ -1,0 +1,457 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .max-w-8xl {
+        max-width: 90rem; /* 1440px */
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .form-input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        background-color: white;
+        border: 1px solid rgb(253, 230, 138);
+        border-radius: 0.5rem;
+        outline: none;
+        transition: all 0.2s;
+    }
+    
+    .form-input:focus {
+        border-color: rgb(245, 158, 11);
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+    }
+    
+    .form-textarea {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background-color: white;
+        border: 1px solid rgb(253, 230, 138);
+        border-radius: 0.5rem;
+        outline: none;
+        transition: all 0.2s;
+    }
+    
+    .form-textarea:focus {
+        border-color: rgb(245, 158, 11);
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+    }
+    
+    .input-icon {
+        position: absolute;
+        top: 50%;
+        left: 0.75rem;
+        transform: translateY(-50%);
+        color: rgb(156, 163, 175);
+        pointer-events: none;
+    }
+    
+    .profile-image {
+        position: relative;
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        overflow: hidden;
+        margin: 0 auto;
+        background-color: #f3f4f6;
+        border: 4px solid white;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    }
+    
+    .profile-image:hover .edit-overlay {
+        opacity: 1;
+    }
+    
+    .edit-overlay {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background-color: rgba(245, 158, 11, 0.8);
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.2s;
+        cursor: pointer;
+    }
+    
+    .profile-tab {
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        border-bottom: 2px solid transparent;
+        font-weight: 500;
+        transition: all 0.2s;
+    }
+    
+    .profile-tab.active {
+        border-bottom: 2px solid rgb(245, 158, 11);
+        color: rgb(245, 158, 11);
+    }
+    
+    .profile-tab:hover:not(.active) {
+        color: rgb(245, 158, 11);
+    }
+    
+    .profile-section {
+        display: none;
+    }
+    
+    .profile-section.active {
+        display: block;
+    }
+</style>
+
+<div class="relative py-12 min-h-[80vh]">
+    <!-- Background Elements -->
+    <div class="absolute inset-0 z-0">
+        <div class="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-amber-600/5 to-transparent"></div>
+    </div>
+    
+    <!-- Animated Background Elements -->
+    <div class="absolute inset-0 z-0 overflow-hidden">
+        <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-amber-400/5 rounded-full blur-3xl animate-pulse"></div>
+        <div class="absolute bottom-1/3 right-1/3 w-72 h-72 bg-blue-500/5 rounded-full blur-3xl animate-pulse" style="animation-delay: 2s;"></div>
+    </div>
+    
+    <div class="max-w-8xl mx-auto px-4 z-10 relative">
+        <!-- Header with glassmorphism -->
+        <div class="backdrop-blur-md bg-white/60 p-6 rounded-xl border border-white/20 shadow-lg mb-8" data-aos="fade-up">
+            <div class="flex items-center">
+                <div class="bg-amber-100 p-3 rounded-full mr-4">
+                    <i class="fas fa-user text-amber-600 text-xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-amber-900">Your Profile</h1>
+            </div>
+        </div>
+        
+        <!-- Main content - Two column layout -->
+        <div class="flex flex-col lg:flex-row gap-8">
+            <!-- Left side - Sidebar -->
+            <div class="w-full lg:w-1/3" data-aos="fade-right">
+                <div class="backdrop-blur-lg bg-white/90 p-8 rounded-xl border border-white/20 shadow-lg">
+                    <div class="profile-image">
+                        {% if user.profile_pic %}
+                            <img src="{{ user.profile_pic.url }}" alt="{{ user.username }}" class="w-full h-full object-cover">
+                        {% else %}
+                            <div class="w-full h-full flex items-center justify-center bg-amber-50">
+                                <i class="fas fa-user text-amber-300 text-5xl"></i>
+                            </div>
+                        {% endif %}
+                        <label for="profile-pic-input" class="edit-overlay">
+                            <i class="fas fa-camera text-white"></i>
+                        </label>
+                        <input type="file" id="profile-pic-input" name="profile_pic" class="hidden" form="profile-form">
+                    </div>
+                    
+                    <div class="text-center mt-4">
+                        <h2 class="text-xl font-bold text-amber-900">{{ user.get_full_name }}</h2>
+                        <p class="text-gray-600">@{{ user.username }}</p>
+                    </div>
+                    
+                    <div class="mt-6 pt-6 border-t border-amber-100">
+                        <div class="flex flex-col">
+                            <div class="flex items-center py-2">
+                                <i class="fas fa-envelope text-amber-500 w-6"></i>
+                                <span class="ml-3 text-gray-700">{{ user.email }}</span>
+                            </div>
+                            <div class="flex items-center py-2">
+                                <i class="fas fa-phone text-amber-500 w-6"></i>
+                                <span class="ml-3 text-gray-700">{{ user.phone_number|default:"Not provided" }}</span>
+                            </div>
+                            <div class="flex items-center py-2">
+                                <i class="fas fa-briefcase text-amber-500 w-6"></i>
+                                <span class="ml-3 text-gray-700">{{ user.owner.business_name }}</span>
+                            </div>
+                            <div class="flex items-center py-2">
+                                <i class="fas fa-calendar-alt text-amber-500 w-6"></i>
+                                <span class="ml-3 text-gray-700">Joined {{ user.date_joined|date:"F j, Y" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-8">
+                        <a href="{% url 'ownership' %}" class="block w-full bg-white border border-amber-300 text-amber-700 font-medium rounded-lg py-3 px-4 text-center hover:bg-amber-50 transition-colors">
+                            <i class="fas fa-exchange-alt mr-2"></i>
+                            Transfer Ownership
+                        </a>
+                        <a href="#" class="block w-full mt-3 border border-gray-300 text-gray-700 font-medium rounded-lg py-2 px-4 text-center hover:bg-gray-50 transition-colors">
+                            <i class="fas fa-file-export mr-2"></i>
+                            Export Data
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right side - Profile tabs -->
+            <div class="w-full lg:w-2/3" data-aos="fade-left">
+                <div class="backdrop-blur-lg bg-white/90 rounded-xl border border-white/20 shadow-lg">
+                    <!-- Profile Tabs -->
+                    <div class="flex border-b border-amber-100">
+                        <div class="profile-tab active" data-tab="personal">
+                            <i class="fas fa-user-circle mr-2"></i>
+                            Personal Info
+                        </div>
+                        <div class="profile-tab" data-tab="security">
+                            <i class="fas fa-lock mr-2"></i>
+                            Security
+                        </div>
+                        <div class="profile-tab" data-tab="preferences">
+                            <i class="fas fa-cogs mr-2"></i>
+                            Preferences
+                        </div>
+                    </div>
+                    
+                    <!-- Personal Info Section -->
+                    <div class="profile-section active" id="personal-section">
+                        <form id="profile-form" method="post" enctype="multipart/form-data" class="p-8">
+                            {% csrf_token %}
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <!-- First Name -->
+                                <div class="space-y-2">
+                                    <label for="first_name" class="block text-sm font-medium text-amber-900">First Name</label>
+                                    <div class="relative">
+                                        <span class="input-icon">
+                                            <i class="fas fa-user"></i>
+                                        </span>
+                                        <input type="text" id="first_name" name="first_name" value="{{ user.first_name }}" class="form-input">
+                                    </div>
+                                </div>
+                                
+                                <!-- Last Name -->
+                                <div class="space-y-2">
+                                    <label for="last_name" class="block text-sm font-medium text-amber-900">Last Name</label>
+                                    <div class="relative">
+                                        <span class="input-icon">
+                                            <i class="fas fa-user"></i>
+                                        </span>
+                                        <input type="text" id="last_name" name="last_name" value="{{ user.last_name }}" class="form-input">
+                                    </div>
+                                </div>
+                                
+                                <!-- Email -->
+                                <div class="space-y-2">
+                                    <label for="email" class="block text-sm font-medium text-amber-900">Email</label>
+                                    <div class="relative">
+                                        <span class="input-icon">
+                                            <i class="fas fa-envelope"></i>
+                                        </span>
+                                        <input type="email" id="email" name="email" value="{{ user.email }}" class="form-input">
+                                    </div>
+                                </div>
+                                
+                                <!-- Phone -->
+                                <div class="space-y-2">
+                                    <label for="phone_number" class="block text-sm font-medium text-amber-900">Phone Number</label>
+                                    <div class="relative">
+                                        <span class="input-icon">
+                                            <i class="fas fa-phone"></i>
+                                        </span>
+                                        <input type="tel" id="phone_number" name="phone_number" value="{{ user.phone_number }}" class="form-input">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Address -->
+                            <div class="mt-6 space-y-2">
+                                <label for="address" class="block text-sm font-medium text-amber-900">Address</label>
+                                <textarea id="address" name="address" rows="3" class="form-textarea">{{ user.address }}</textarea>
+                            </div>
+                            
+                            <!-- Animal Expertise -->
+                            <div class="mt-6 space-y-2">
+                                <label for="animal_expertise" class="block text-sm font-medium text-amber-900">Animal Expertise</label>
+                                <textarea id="animal_expertise" name="animal_expertise" rows="3" class="form-textarea">{{ user.animal_expertise }}</textarea>
+                                <p class="text-xs text-gray-500">Describe your experience with livestock management, including species you've worked with and years of experience.</p>
+                            </div>
+                            
+                            <div class="mt-8 flex justify-end">
+                                <button type="submit" class="px-6 py-3 bg-gradient-to-r from-amber-400 to-amber-500 text-white font-medium rounded-lg shadow-md hover:shadow-lg hover:from-amber-500 hover:to-amber-600 transition-all transform hover:-translate-y-0.5 duration-300">
+                                    <i class="fas fa-save mr-2"></i>
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Security Section -->
+                    <div class="profile-section" id="security-section">
+                        <form method="post" action="{% url 'change_password' %}" class="p-8">
+                            {% csrf_token %}
+                            <div class="space-y-6">
+                                <!-- Current Password -->
+                                <div class="space-y-2">
+                                    <label for="current_password" class="block text-sm font-medium text-amber-900">Current Password</label>
+                                    <div class="relative">
+                                        <span class="input-icon">
+                                            <i class="fas fa-lock"></i>
+                                        </span>
+                                        <input type="password" id="current_password" name="current_password" required class="form-input">
+                                    </div>
+                                </div>
+                                
+                                <!-- New Password -->
+                                <div class="space-y-2">
+                                    <label for="new_password" class="block text-sm font-medium text-amber-900">New Password</label>
+                                    <div class="relative">
+                                        <span class="input-icon">
+                                            <i class="fas fa-key"></i>
+                                        </span>
+                                        <input type="password" id="new_password" name="new_password" required class="form-input">
+                                    </div>
+                                    <p class="text-xs text-gray-500">Password must be at least 8 characters and include uppercase, lowercase, numbers and special characters.</p>
+                                </div>
+                                
+                                <!-- Confirm New Password -->
+                                <div class="space-y-2">
+                                    <label for="confirm_password" class="block text-sm font-medium text-amber-900">Confirm New Password</label>
+                                    <div class="relative">
+                                        <span class="input-icon">
+                                            <i class="fas fa-key"></i>
+                                        </span>
+                                        <input type="password" id="confirm_password" name="confirm_password" required class="form-input">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-8 flex justify-end">
+                                <button type="submit" class="px-6 py-3 bg-gradient-to-r from-amber-400 to-amber-500 text-white font-medium rounded-lg shadow-md hover:shadow-lg hover:from-amber-500 hover:to-amber-600 transition-all transform hover:-translate-y-0.5 duration-300">
+                                    <i class="fas fa-lock mr-2"></i>
+                                    Update Password
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Preferences Section -->
+                    <div class="profile-section" id="preferences-section">
+                        <form method="post" action="{% url 'update_preferences' %}" class="p-8">
+                            {% csrf_token %}
+                            <div class="space-y-6">
+                                <!-- Notification Preferences -->
+                                <div class="space-y-3">
+                                    <h3 class="font-bold text-amber-900">Notification Preferences</h3>
+                                    
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="email_notifications" name="email_notifications" class="rounded text-amber-500 focus:ring-amber-500 h-4 w-4">
+                                        <label for="email_notifications" class="ml-2 text-gray-700">Email notifications</label>
+                                    </div>
+                                    
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="sms_notifications" name="sms_notifications" class="rounded text-amber-500 focus:ring-amber-500 h-4 w-4">
+                                        <label for="sms_notifications" class="ml-2 text-gray-700">SMS notifications (requires verified phone number)</label>
+                                    </div>
+                                    
+                                    <div class="flex items-center">
+                                        <input type="checkbox" id="browser_notifications" name="browser_notifications" class="rounded text-amber-500 focus:ring-amber-500 h-4 w-4">
+                                        <label for="browser_notifications" class="ml-2 text-gray-700">Browser notifications</label>
+                                    </div>
+                                </div>
+                                
+                                <!-- Default View -->
+                                <div class="space-y-3">
+                                    <h3 class="font-bold text-amber-900">Default View</h3>
+                                    
+                                    <div class="flex items-center">
+                                        <input type="radio" id="table_view" name="default_view" value="table" class="text-amber-500 focus:ring-amber-500 h-4 w-4">
+                                        <label for="table_view" class="ml-2 text-gray-700">Table View</label>
+                                    </div>
+                                    
+                                    <div class="flex items-center">
+                                        <input type="radio" id="card_view" name="default_view" value="card" class="text-amber-500 focus:ring-amber-500 h-4 w-4">
+                                        <label for="card_view" class="ml-2 text-gray-700">Card View</label>
+                                    </div>
+                                </div>
+                                
+                                <!-- Language -->
+                                <div class="space-y-2">
+                                    <label for="language" class="block text-sm font-medium text-amber-900">Language</label>
+                                    <select id="language" name="language" class="form-input">
+                                        <option value="en">English</option>
+                                        <option value="hi">Hindi</option>
+                                        <option value="mr">Marathi</option>
+                                        <option value="te">Telugu</option>
+                                        <option value="ta">Tamil</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="mt-8 flex justify-end">
+                                <button type="submit" class="px-6 py-3 bg-gradient-to-r from-amber-400 to-amber-500 text-white font-medium rounded-lg shadow-md hover:shadow-lg hover:from-amber-500 hover:to-amber-600 transition-all transform hover:-translate-y-0.5 duration-300">
+                                    <i class="fas fa-save mr-2"></i>
+                                    Save Preferences
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize animations if AOS is available
+        if (typeof AOS !== 'undefined') {
+            AOS.refresh();
+        }
+        
+        // Tab functionality
+        const tabs = document.querySelectorAll('.profile-tab');
+        const sections = document.querySelectorAll('.profile-section');
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('click', function() {
+                // Remove active class from all tabs
+                tabs.forEach(t => t.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                this.classList.add('active');
+                
+                // Hide all sections
+                sections.forEach(section => section.classList.remove('active'));
+                
+                // Show the corresponding section
+                const tabName = this.getAttribute('data-tab');
+                document.getElementById(`${tabName}-section`).classList.add('active');
+            });
+        });
+        
+        // Profile picture upload preview
+        const profilePicInput = document.getElementById('profile-pic-input');
+        const profileImage = document.querySelector('.profile-image');
+        
+        if (profilePicInput) {
+            profilePicInput.addEventListener('change', function(e) {
+                if (e.target.files && e.target.files[0]) {
+                    const reader = new FileReader();
+                    
+                    reader.onload = function(e) {
+                        // Create/update image element
+                        let img = profileImage.querySelector('img');
+                        if (!img) {
+                            img = document.createElement('img');
+                            img.classList.add('w-full', 'h-full', 'object-cover');
+                            
+                            // Replace placeholder with actual image
+                            const placeholder = profileImage.querySelector('div');
+                            if (placeholder) {
+                                profileImage.removeChild(placeholder);
+                            }
+                            
+                            profileImage.insertBefore(img, profileImage.firstChild);
+                        }
+                        
+                        img.src = e.target.result;
+                    };
+                    
+                    reader.readAsDataURL(e.target.files[0]);
+                }
+            });
+        }
+    });
+</script>
+{% endblock %}

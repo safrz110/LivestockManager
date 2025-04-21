@@ -1,0 +1,653 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .max-w-8xl {
+        max-width: 90rem; /* 1440px */
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .form-input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        background-color: white;
+        border: 1px solid rgb(253, 230, 138);
+        border-radius: 0.5rem;
+        outline: none;
+        transition: all 0.2s;
+    }
+    
+    .form-input:focus {
+        border-color: rgb(245, 158, 11);
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+    }
+    
+    .form-select {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        background-color: white;
+        border: 1px solid rgb(253, 230, 138);
+        border-radius: 0.5rem;
+        outline: none;
+        transition: all 0.2s;
+        -webkit-appearance: none;
+        appearance: none;
+    }
+    
+    .form-textarea {
+        width: 100%;
+        padding: 0.75rem 1rem;
+        background-color: white;
+        border: 1px solid rgb(253, 230, 138);
+        border-radius: 0.5rem;
+        outline: none;
+        transition: all 0.2s;
+    }
+    
+    .input-icon {
+        position: absolute;
+        top: 50%;
+        left: 0.75rem;
+        transform: translateY(-50%);
+        color: rgb(156, 163, 175);
+        pointer-events: none;
+    }
+    
+    .health-record-card {
+        transition: all 0.3s ease;
+    }
+    
+    .health-record-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    
+    .timeline-container {
+        position: relative;
+    }
+    
+    .timeline-container:before {
+        content: '';
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        left: 25px;
+        width: 2px;
+        background: rgb(251, 191, 36);
+        opacity: 0.3;
+    }
+    
+    .timeline-item {
+        position: relative;
+        padding-left: 50px;
+    }
+    
+    .timeline-dot {
+        position: absolute;
+        left: 21px;
+        top: 20px;
+        transform: translateY(-50%);
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+    }
+    
+    /* Dot colors based on record types */
+    .dot-vaccination {
+        background-color: rgb(52, 211, 153); /* green */
+    }
+    
+    .dot-treatment {
+        background-color: rgb(239, 68, 68); /* red */
+    }
+    
+    .dot-checkup {
+        background-color: rgb(59, 130, 246); /* blue */
+    }
+    
+    .dot-other {
+        background-color: rgb(124, 58, 237); /* purple */
+    }
+</style>
+
+<div class="relative py-12 min-h-[80vh]">
+    <!-- Background Elements -->
+    <div class="absolute inset-0 z-0">
+        <div class="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-amber-600/5 to-transparent"></div>
+    </div>
+    
+    <!-- Animated Background Elements -->
+    <div class="absolute inset-0 z-0 overflow-hidden">
+        <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-amber-400/5 rounded-full blur-3xl animate-pulse"></div>
+        <div class="absolute bottom-1/3 right-1/3 w-72 h-72 bg-blue-500/5 rounded-full blur-3xl animate-pulse" style="animation-delay: 2s;"></div>
+    </div>
+    
+    <div class="max-w-8xl mx-auto px-4 z-10 relative">
+        <!-- Header with glassmorphism -->
+        <div class="backdrop-blur-md bg-white/60 p-6 rounded-xl border border-white/20 shadow-lg mb-8" data-aos="fade-up">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <div class="bg-amber-100 p-3 rounded-full mr-4">
+                        <i class="fas fa-heartbeat text-amber-600 text-xl"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-amber-900">Health Records</h1>
+                </div>
+                <a href="{% url 'animal_list' %}" class="text-amber-600 hover:text-amber-800 font-medium flex items-center">
+                    <i class="fas fa-arrow-left mr-2"></i>
+                    Back to Animals
+                </a>
+            </div>
+        </div>
+        
+        <!-- Main content -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <!-- Left side - Animal Selection and Stats -->
+            <div class="lg:col-span-1">
+                <div class="backdrop-blur-lg bg-white/90 p-6 rounded-xl border border-white/20 shadow-lg mb-6" data-aos="fade-up">
+                    <h2 class="text-xl font-bold text-amber-900 mb-4">
+                        <i class="fas fa-cow mr-2"></i>
+                        Select Animal
+                    </h2>
+                    
+                    <div class="space-y-4">
+                        <!-- Animal Selector -->
+                        <div class="relative">
+                            <span class="input-icon">
+                                <i class="fas fa-search"></i>
+                            </span>
+                            <select id="animal-selector" class="form-select">
+                                <option value="" disabled {% if not selected_animal %}selected{% endif %}>Select an animal</option>
+                                {% for animal in animals %}
+                                    <option value="{{ animal.id }}" {% if selected_animal.id == animal.id %}selected{% endif %}>
+                                        {{ animal.tag_number }} - {{ animal.species }} {% if animal.breed %}({{ animal.breed }}){% endif %}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if selected_animal %}
+                    <div class="backdrop-blur-lg bg-white/90 p-6 rounded-xl border border-white/20 shadow-lg mb-6" data-aos="fade-up" data-aos-delay="100">
+                        <div class="flex items-center justify-between mb-4">
+                            <h2 class="text-xl font-bold text-amber-900">
+                                <i class="fas fa-info-circle mr-2"></i>
+                                Animal Details
+                            </h2>
+                            <span class="bg-amber-100 text-amber-800 text-xs font-medium px-2.5 py-0.5 rounded-full">{{ selected_animal.tag_number }}</span>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Species:</span>
+                                <span class="font-medium">{{ selected_animal.species }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Breed:</span>
+                                <span class="font-medium">{{ selected_animal.breed|default:"Not specified" }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Birth Date:</span>
+                                <span class="font-medium">{{ selected_animal.birth_date }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Age:</span>
+                                <span class="font-medium">{{ selected_animal.get_age }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Sex:</span>
+                                <span class="font-medium">{{ selected_animal.sex }}</span>
+                            </div>
+                            <hr class="border-amber-100">
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Records:</span>
+                                <span class="font-medium">{{ health_records|length }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-gray-600">Last Checkup:</span>
+                                <span class="font-medium">{{ last_checkup_date|default:"Never" }}</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="backdrop-blur-lg bg-white/90 p-6 rounded-xl border border-white/20 shadow-lg" data-aos="fade-up" data-aos-delay="150">
+                        <h2 class="text-xl font-bold text-amber-900 mb-4">
+                            <i class="fas fa-chart-pie mr-2"></i>
+                            Health Summary
+                        </h2>
+                        
+                        <div class="space-y-4">
+                            <!-- Vaccination Status -->
+                            <div>
+                                <div class="flex justify-between items-center mb-1">
+                                    <label class="text-sm text-gray-600">Vaccination Status</label>
+                                    <span class="text-xs font-medium {% if vaccination_status == 'Up to date' %}text-green-600{% else %}text-amber-600{% endif %}">
+                                        {{ vaccination_status }}
+                                    </span>
+                                </div>
+                                <div class="w-full bg-gray-200 rounded-full h-2">
+                                    <div class="{% if vaccination_status == 'Up to date' %}bg-green-500{% else %}bg-amber-500{% endif %} h-2 rounded-full" style="width: {{ vaccination_percentage }}%"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Health markers -->
+                            <div class="grid grid-cols-2 gap-4 mt-4">
+                                <div class="bg-green-50 rounded-lg p-3 text-center border border-green-100">
+                                    <span class="text-sm text-gray-600 block">Vaccinations</span>
+                                    <span class="text-xl font-bold text-green-600">{{ vaccination_count }}</span>
+                                </div>
+                                <div class="bg-red-50 rounded-lg p-3 text-center border border-red-100">
+                                    <span class="text-sm text-gray-600 block">Treatments</span>
+                                    <span class="text-xl font-bold text-red-600">{{ treatment_count }}</span>
+                                </div>
+                                <div class="bg-blue-50 rounded-lg p-3 text-center border border-blue-100">
+                                    <span class="text-sm text-gray-600 block">Checkups</span>
+                                    <span class="text-xl font-bold text-blue-600">{{ checkup_count }}</span>
+                                </div>
+                                <div class="bg-purple-50 rounded-lg p-3 text-center border border-purple-100">
+                                    <span class="text-sm text-gray-600 block">Other</span>
+                                    <span class="text-xl font-bold text-purple-600">{{ other_count }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="backdrop-blur-lg bg-white/90 p-6 rounded-xl border border-white/20 shadow-lg text-center" data-aos="fade-up" data-aos-delay="100">
+                        <div class="py-8">
+                            <div class="bg-amber-50 h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <i class="fas fa-cow text-amber-300 text-3xl"></i>
+                            </div>
+                            <h3 class="text-lg font-medium text-gray-700 mb-2">No Animal Selected</h3>
+                            <p class="text-gray-500 mb-4">Please select an animal to view or add health records.</p>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Right side - Health Records and Add Form -->
+            <div class="lg:col-span-2">
+                {% if selected_animal %}
+                    <!-- Add New Health Record Form -->
+                    <div class="backdrop-blur-lg bg-white/90 p-6 rounded-xl border border-white/20 shadow-lg mb-6" data-aos="fade-up">
+                        <h2 class="text-xl font-bold text-amber-900 mb-4">
+                            <i class="fas fa-plus-circle mr-2"></i>
+                            Add Health Record
+                        </h2>
+                        
+                        <form method="post" action="{% url 'add_health_record' selected_animal.id %}" class="space-y-4" id="health-record-form">
+                            {% csrf_token %}
+                            
+                            <!-- Record Type and Date -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Record Type -->
+                                <div class="space-y-2">
+                                    <label for="record_type" class="block text-sm font-medium text-amber-900">Record Type*</label>
+                                    <div class="relative">
+                                        <span class="input-icon">
+                                            <i class="fas fa-file-medical"></i>
+                                        </span>
+                                        <select id="record_type" name="record_type" required class="form-select">
+                                            <option value="" disabled selected>Select type</option>
+                                            <option value="vaccination">Vaccination</option>
+                                            <option value="treatment">Treatment</option>
+                                            <option value="checkup">Regular Checkup</option>
+                                            <option value="other">Other</option>
+                                        </select>
+                                        <span class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-500">
+                                            <i class="fas fa-chevron-down"></i>
+                                        </span>
+                                    </div>
+                                </div>
+                                
+                                <!-- Record Date -->
+                                <div class="space-y-2">
+                                    <label for="record_date" class="block text-sm font-medium text-amber-900">Date*</label>
+                                    <div class="relative">
+                                        <span class="input-icon">
+                                            <i class="fas fa-calendar-alt"></i>
+                                        </span>
+                                        <input type="date" id="record_date" name="record_date" required class="form-input" value="{{ today }}">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Title and Performed By -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Title -->
+                                <div class="space-y-2">
+                                    <label for="title" class="block text-sm font-medium text-amber-900">Title/Procedure*</label>
+                                    <div class="relative">
+                                        <span class="input-icon">
+                                            <i class="fas fa-heading"></i>
+                                        </span>
+                                        <input type="text" id="title" name="title" required class="form-input" placeholder="E.g. Annual Vaccination, Parasite Treatment">
+                                    </div>
+                                </div>
+                                
+                                <!-- Performed By -->
+                                <div class="space-y-2">
+                                    <label for="performed_by" class="block text-sm font-medium text-amber-900">Performed By</label>
+                                    <div class="relative">
+                                        <span class="input-icon">
+                                            <i class="fas fa-user-md"></i>
+                                        </span>
+                                        <input type="text" id="performed_by" name="performed_by" class="form-input" placeholder="Veterinarian name or self">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Description -->
+                            <div class="space-y-2">
+                                <label for="description" class="block text-sm font-medium text-amber-900">Description*</label>
+                                <textarea id="description" name="description" rows="4" required class="form-textarea" placeholder="Provide details about the health record..."></textarea>
+                            </div>
+                            
+                            <!-- Medications and Cost -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <!-- Medications -->
+                                <div class="space-y-2">
+                                    <label for="medications" class="block text-sm font-medium text-amber-900">Medications</label>
+                                    <div class="relative">
+                                        <span class="input-icon">
+                                            <i class="fas fa-pills"></i>
+                                        </span>
+                                        <input type="text" id="medications" name="medications" class="form-input" placeholder="E.g. Antibiotics, Vitamins">
+                                    </div>
+                                </div>
+                                
+                                <!-- Cost -->
+                                <div class="space-y-2">
+                                    <label for="cost" class="block text-sm font-medium text-amber-900">Cost</label>
+                                    <div class="relative">
+                                        <span class="input-icon">
+                                            <i class="fas fa-rupee-sign"></i>
+                                        </span>
+                                        <input type="number" id="cost" name="cost" min="0" step="0.01" class="form-input" placeholder="0.00">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Next Follow-up Date -->
+                            <div class="space-y-2">
+                                <label for="follow_up_date" class="block text-sm font-medium text-amber-900">Next Follow-up Date</label>
+                                <div class="relative">
+                                    <span class="input-icon">
+                                        <i class="fas fa-calendar-plus"></i>
+                                    </span>
+                                    <input type="date" id="follow_up_date" name="follow_up_date" class="form-input">
+                                </div>
+                            </div>
+                            
+                            <div class="pt-4 flex justify-end">
+                                <button type="submit" class="px-6 py-3 bg-gradient-to-r from-amber-400 to-amber-500 text-white font-medium rounded-lg shadow-md hover:shadow-lg hover:from-amber-500 hover:to-amber-600 transition-all transform hover:-translate-y-0.5 duration-300">
+                                    <i class="fas fa-plus-circle mr-2"></i>
+                                    Add Record
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                    
+                    <!-- Health Records Timeline -->
+                    <div class="backdrop-blur-lg bg-white/90 p-6 rounded-xl border border-white/20 shadow-lg" data-aos="fade-up" data-aos-delay="100">
+                        <div class="flex justify-between items-center mb-6">
+                            <h2 class="text-xl font-bold text-amber-900">
+                                <i class="fas fa-clipboard-list mr-2"></i>
+                                Health History
+                            </h2>
+                            
+                            <!-- Filter Options -->
+                            <div class="relative">
+                                <select id="filter-records" class="text-sm border border-amber-200 rounded-lg px-3 py-1.5 pr-8 focus:ring focus:ring-amber-200 focus:border-amber-500 outline-none">
+                                    <option value="all">All Records</option>
+                                    <option value="vaccination">Vaccinations</option>
+                                    <option value="treatment">Treatments</option>
+                                    <option value="checkup">Checkups</option>
+                                    <option value="other">Other</option>
+                                </select>
+                                <span class="absolute inset-y-0 right-2 flex items-center pointer-events-none text-gray-500">
+                                    <i class="fas fa-chevron-down text-xs"></i>
+                                </span>
+                            </div>
+                        </div>
+                        
+                        {% if health_records %}
+                            <!-- Timeline View -->
+                            <div class="timeline-container pb-6 pt-2 pl-2">
+                                {% for record in health_records %}
+                                    <div class="timeline-item mb-6 health-record-item" data-type="{{ record.record_type }}">
+                                        <div class="timeline-dot dot-{{ record.record_type }}"></div>
+                                        <div class="health-record-card bg-white border {% if record.record_type == 'vaccination' %}border-green-100{% elif record.record_type == 'treatment' %}border-red-100{% elif record.record_type == 'checkup' %}border-blue-100{% else %}border-purple-100{% endif %} rounded-lg p-4 shadow-sm">
+                                            <div class="flex justify-between items-start mb-2">
+                                                <div>
+                                                    <span class="text-xs font-medium text-amber-600">{{ record.record_date|date:"M d, Y" }}</span>
+                                                    <h3 class="font-medium text-gray-900">{{ record.title }}</h3>
+                                                </div>
+                                                
+                                                <span class="px-2 py-1 text-xs font-medium rounded-full 
+                                                    {% if record.record_type == 'vaccination' %}
+                                                        bg-green-100 text-green-800
+                                                    {% elif record.record_type == 'treatment' %}
+                                                        bg-red-100 text-red-800
+                                                    {% elif record.record_type == 'checkup' %}
+                                                        bg-blue-100 text-blue-800
+                                                    {% else %}
+                                                        bg-purple-100 text-purple-800
+                                                    {% endif %}">
+                                                    {{ record.get_record_type_display }}
+                                                </span>
+                                            </div>
+                                            
+                                            <p class="text-sm text-gray-600 mb-3">{{ record.description }}</p>
+                                            
+                                            <div class="grid grid-cols-2 gap-2 text-xs text-gray-500">
+                                                {% if record.performed_by %}
+                                                <div>
+                                                    <span class="font-medium">Performed by:</span> {{ record.performed_by }}
+                                                </div>
+                                                {% endif %}
+                                                
+                                                {% if record.medications %}
+                                                <div>
+                                                    <span class="font-medium">Medications:</span> {{ record.medications }}
+                                                </div>
+                                                {% endif %}
+                                                
+                                                {% if record.cost %}
+                                                <div>
+                                                    <span class="font-medium">Cost:</span> ₹{{ record.cost }}
+                                                </div>
+                                                {% endif %}
+                                                
+                                                {% if record.follow_up_date %}
+                                                <div>
+                                                    <span class="font-medium">Follow-up:</span> {{ record.follow_up_date|date:"M d, Y" }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <div class="mt-3 flex justify-end space-x-2">
+                                                <button type="button" class="text-amber-500 hover:text-amber-700" 
+                                                        onclick="editHealthRecord('{{ record.id }}')">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <form action="{% url 'delete_health_record' record.id %}" method="post" class="inline" onsubmit="return confirm('Are you sure you want to delete this record?');">
+                                                    {% csrf_token %}
+                                                    <button type="submit" class="text-red-500 hover:text-red-700">
+                                                        <i class="fas fa-trash"></i>
+                                                    </button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% else %}
+                            <div class="text-center py-12">
+                                <div class="bg-amber-50 h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <i class="fas fa-heartbeat text-amber-300 text-3xl"></i>
+                                </div>
+                                <h3 class="text-lg font-medium text-gray-700 mb-2">No Health Records</h3>
+                                <p class="text-gray-500 mb-4">This animal doesn't have any health records yet.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Record Modal (hidden by default) -->
+<div id="edit-record-modal" class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+    <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg transform transition-all">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium text-amber-900">Edit Health Record</h3>
+            <button type="button" class="text-gray-400 hover:text-gray-500" onclick="closeEditModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        
+        <form id="edit-record-form" method="post" class="space-y-4">
+            {% csrf_token %}
+            <input type="hidden" id="edit-record-id" name="record_id">
+            
+            <!-- Record Type and Date -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-2">
+                    <label for="edit-record-type" class="block text-sm font-medium text-amber-900">Record Type*</label>
+                    <select id="edit-record-type" name="record_type" required class="w-full border border-amber-200 rounded-lg px-3 py-2">
+                        <option value="vaccination">Vaccination</option>
+                        <option value="treatment">Treatment</option>
+                        <option value="checkup">Regular Checkup</option>
+                        <option value="other">Other</option>
+                    </select>
+                </div>
+                
+                <div class="space-y-2">
+                    <label for="edit-record-date" class="block text-sm font-medium text-amber-900">Date*</label>
+                    <input type="date" id="edit-record-date" name="record_date" required class="w-full border border-amber-200 rounded-lg px-3 py-2">
+                </div>
+            </div>
+            
+            <!-- Title -->
+            <div class="space-y-2">
+                <label for="edit-title" class="block text-sm font-medium text-amber-900">Title/Procedure*</label>
+                <input type="text" id="edit-title" name="title" required class="w-full border border-amber-200 rounded-lg px-3 py-2">
+            </div>
+            
+            <!-- Description -->
+            <div class="space-y-2">
+                <label for="edit-description" class="block text-sm font-medium text-amber-900">Description*</label>
+                <textarea id="edit-description" name="description" rows="3" required class="w-full border border-amber-200 rounded-lg px-3 py-2"></textarea>
+            </div>
+            
+            <!-- Medications and Cost -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-2">
+                    <label for="edit-medications" class="block text-sm font-medium text-amber-900">Medications</label>
+                    <input type="text" id="edit-medications" name="medications" class="w-full border border-amber-200 rounded-lg px-3 py-2">
+                </div>
+                
+                <div class="space-y-2">
+                    <label for="edit-cost" class="block text-sm font-medium text-amber-900">Cost</label>
+                    <input type="number" id="edit-cost" name="cost" min="0" step="0.01" class="w-full border border-amber-200 rounded-lg px-3 py-2">
+                </div>
+            </div>
+            
+            <!-- Performed By and Follow-up -->
+            <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-2">
+                    <label for="edit-performed-by" class="block text-sm font-medium text-amber-900">Performed By</label>
+                    <input type="text" id="edit-performed-by" name="performed_by" class="w-full border border-amber-200 rounded-lg px-3 py-2">
+                </div>
+                
+                <div class="space-y-2">
+                    <label for="edit-follow-up-date" class="block text-sm font-medium text-amber-900">Follow-up Date</label>
+                    <input type="date" id="edit-follow-up-date" name="follow_up_date" class="w-full border border-amber-200 rounded-lg px-3 py-2">
+                </div>
+            </div>
+            
+            <div class="pt-4 flex justify-end space-x-3">
+                <button type="button" class="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50" onclick="closeEditModal()">
+                    Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-600">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize animations if AOS is available
+        if (typeof AOS !== 'undefined') {
+            AOS.refresh();
+        }
+        
+        // Animal selector functionality
+        const animalSelector = document.getElementById('animal-selector');
+        if (animalSelector) {
+            animalSelector.addEventListener('change', function() {
+                if (this.value) {
+                    window.location.href = `/health-records/?animal_id=${this.value}`;
+                }
+            });
+        }
+        
+        // Record filter functionality
+        const filterRecords = document.getElementById('filter-records');
+        if (filterRecords) {
+            filterRecords.addEventListener('change', function() {
+                const filterValue = this.value;
+                const recordItems = document.querySelectorAll('.health-record-item');
+                
+                recordItems.forEach(item => {
+                    if (filterValue === 'all' || item.dataset.type === filterValue) {
+                        item.style.display = 'block';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+            });
+        }
+    });
+    
+    // Edit record functionality
+    function editHealthRecord(recordId) {
+        // Fetch record data using AJAX
+        fetch(`/api/health-record/${recordId}/`)
+            .then(response => response.json())
+            .then(data => {
+                // Populate form fields with record data
+                document.getElementById('edit-record-id').value = data.id;
+                document.getElementById('edit-record-type').value = data.record_type;
+                document.getElementById('edit-record-date').value = data.record_date;
+                document.getElementById('edit-title').value = data.title;
+                document.getElementById('edit-description').value = data.description;
+                document.getElementById('edit-medications').value = data.medications || '';
+                document.getElementById('edit-cost').value = data.cost || '';
+                document.getElementById('edit-performed-by').value = data.performed_by || '';
+                document.getElementById('edit-follow-up-date').value = data.follow_up_date || '';
+                
+                // Set action URL for the form
+                document.getElementById('edit-record-form').action = `/health-records/edit/${data.id}/`;
+                
+                // Show modal
+                document.getElementById('edit-record-modal').classList.remove('hidden');
+                document.body.classList.add('overflow-hidden');
+            })
+            .catch(error => {
+                console.error('Error fetching record data:', error);
+                alert('Failed to load record data. Please try again.');
+            });
+    }
+    
+    function closeEditModal() {
+        document.getElementById('edit-record-modal').classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }
+</script>
+{% endblock %}

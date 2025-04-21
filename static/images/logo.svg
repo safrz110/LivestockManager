@@ -1,0 +1,13 @@
+<svg width="150" height="40" viewBox="0 0 150 40" fill="none" xmlns="http://www.w3.org/2000/svg" font-weight="700">
+  <!-- Bold "L" letter with thicker stroke -->
+  <path d="M12 6H3V34H12V6Z" fill="#F59E0B" stroke="#F59E0B" stroke-width="2"/>
+  
+  <!-- Bold "M" letter with thicker stroke -->
+  <path d="M14 6H22V19H34V26H22V34H14V6Z" fill="#F59E0B" stroke="#F59E0B" stroke-width="2"/>
+  
+  <!-- Full Name - bolder version -->
+  <g class="full-name">
+    <text x="40" y="26" fill="#78350F" font-family="Arial, sans-serif" font-size="16" font-weight="800">LIVESTOCK</text>
+    <text x="114" y="26" fill="#78350F" font-family="Arial, sans-serif" font-size="16" font-weight="800">MANAGER</text>
+  </g>
+</svg>

@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">Add New Animal</h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" id="animal-form">
+                        {% csrf_token %}
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.tag_number.id_for_label }}" class="form-label">Tag Number*</label>
+                                <div class="input-group">
+                                    {{ form.tag_number }}
+                                    <button type="button" id="generate-tag-btn" class="btn btn-secondary">Generate</button>
+                                </div>
+                                {% if form.tag_number.errors %}
+                                    <div class="text-danger">{{ form.tag_number.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.species.id_for_label }}" class="form-label">Species*</label>
+                                {{ form.species }}
+                                {% if form.species.errors %}
+                                    <div class="text-danger">{{ form.species.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="{{ form.breed.id_for_label }}" class="form-label">Breed</label>
+                                {{ form.breed }}
+                                {% if form.breed.errors %}
+                                    <div class="text-danger">{{ form.breed.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <label for="{{ form.sex.id_for_label }}" class="form-label">Sex*</label>
+                                {{ form.sex }}
+                                {% if form.sex.errors %}
+                                    <div class="text-danger">{{ form.sex.errors }}</div>
+                                {% endif %}
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <label for="{{ form.age.id_for_label }}" class="form-label">Age (months)</label>
+                                {{ form.age }}
+                                {% if form.age.errors %}
+                                    <div class="text-danger">{{ form.age.errors }}</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                            {{ form.notes }}
+                            {% if form.notes.errors %}
+                                <div class="text-danger">{{ form.notes.errors }}</div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <button type="button" class="btn btn-secondary me-md-2" onclick="window.history.back()">Cancel</button>
+                            <button type="submit" class="btn btn-primary">Add Animal</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Generate tag API call
+    document.getElementById('generate-tag-btn').addEventListener('click', function() {
+        fetch('{% url "generate_tag" %}')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('{{ form.tag_number.id_for_label }}').value = data.tag;
+                }
+            });
+    });
+    
+    // Load breeds when species changes
+    document.getElementById('species-select').addEventListener('change', function() {
+        const speciesId = this.value;
+        if (!speciesId) {
+            // Clear breed dropdown if no species selected
+            const breedSelect = document.getElementById('breed-select');
+            breedSelect.innerHTML = '<option value="">Select Breed</option>';
+            return;
+        }
+        
+        // Fetch breeds for the selected species
+        fetch(`/animals/breeds/?species_id=${speciesId}`)
+            .then(response => response.json())
+            .then(breeds => {
+                const breedSelect = document.getElementById('breed-select');
+                breedSelect.innerHTML = '<option value="">Select Breed</option>';
+                
+                breeds.forEach(breed => {
+                    const option = document.createElement('option');
+                    option.value = breed.id;
+                    option.textContent = breed.name;
+                    breedSelect.appendChild(option);
+                });
+            });
+    });
+</script>
+{% endblock %}

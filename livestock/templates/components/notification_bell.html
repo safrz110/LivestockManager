@@ -1,0 +1,169 @@
+<div class="relative" id="notification-container">
+    <button id="notification-button" class="p-2 rounded-full text-gray-500 hover:text-amber-700 hover:bg-amber-50 focus:outline-none focus:ring-2 focus:ring-amber-500 transition-colors">
+        <i class="fas fa-bell"></i>
+        {% if unread_notifications_count > 0 %}
+            <span class="absolute top-0 right-0 inline-flex items-center justify-center px-2 py-1 text-xs font-bold leading-none transform translate-x-1/2 -translate-y-1/2 bg-red-500 text-white rounded-full">
+                {{ unread_notifications_count }}
+            </span>
+        {% endif %}
+    </button>
+    
+    <!-- Notifications dropdown (hidden by default) -->
+    <div id="notifications-dropdown" class="hidden origin-top-right absolute right-0 mt-2 w-80 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 py-1 z-50">
+        <div class="px-4 py-2 border-b border-gray-100 flex justify-between items-center">
+            <h3 class="font-medium text-gray-900">Notifications</h3>
+            {% if notifications %}
+                <button id="mark-all-read" class="text-xs text-amber-600 hover:text-amber-800">
+                    Mark all as read
+                </button>
+            {% endif %}
+        </div>
+        
+        <div class="max-h-96 overflow-y-auto">
+            {% for notification in notifications %}
+                <div class="notification-item p-4 border-b border-gray-100 hover:bg-amber-50 transition-colors {% if not notification.is_read %}bg-amber-50/50{% endif %}">
+                    <div class="flex items-start">
+                        <!-- Icon based on notification type -->
+                        <div class="flex-shrink-0 mr-3">
+                            {% if notification.type == 'transfer_request' %}
+                                <div class="w-8 h-8 rounded-full bg-blue-100 flex items-center justify-center">
+                                    <i class="fas fa-exchange-alt text-blue-500"></i>
+                                </div>
+                            {% elif notification.type == 'transfer_accepted' %}
+                                <div class="w-8 h-8 rounded-full bg-green-100 flex items-center justify-center">
+                                    <i class="fas fa-check-circle text-green-500"></i>
+                                </div>
+                            {% elif notification.type == 'transfer_rejected' %}
+                                <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center">
+                                    <i class="fas fa-times-circle text-red-500"></i>
+                                </div>
+                            {% else %}
+                                <div class="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center">
+                                    <i class="fas fa-bell text-amber-500"></i>
+                                </div>
+                            {% endif %}
+                        </div>
+                        
+                        <!-- Notification content -->
+                        <div class="flex-grow">
+                            <p class="text-sm text-gray-900">{{ notification.message }}</p>
+                            <p class="text-xs text-gray-500 mt-1">{{ notification.created_at|timesince }} ago</p>
+                        </div>
+                        
+                        <!-- Mark as read button -->
+                        {% if not notification.is_read %}
+                            <button class="mark-read-btn flex-shrink-0 ml-2 text-gray-400 hover:text-gray-500" 
+                                    data-id="{{ notification.id }}">
+                                <i class="fas fa-circle text-xs"></i>
+                            </button>
+                        {% endif %}
+                    </div>
+                </div>
+            {% empty %}
+                <div class="py-8 text-center">
+                    <div class="bg-amber-50 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <i class="fas fa-bell-slash text-amber-300 text-xl"></i>
+                    </div>
+                    <p class="text-gray-500">No notifications</p>
+                </div>
+            {% endfor %}
+        </div>
+        
+        {% if notifications %}
+            <div class="px-4 py-2 border-t border-gray-100 text-center">
+                <a href="{% url 'notifications' %}" class="text-sm text-amber-600 hover:text-amber-800">
+                    View all notifications
+                </a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const notificationButton = document.getElementById('notification-button');
+        const notificationsDropdown = document.getElementById('notifications-dropdown');
+        const markAllReadBtn = document.getElementById('mark-all-read');
+        const markReadBtns = document.querySelectorAll('.mark-read-btn');
+        
+        // Toggle notifications dropdown
+        if (notificationButton) {
+            notificationButton.addEventListener('click', function() {
+                notificationsDropdown.classList.toggle('hidden');
+            });
+            
+            // Close when clicking outside
+            document.addEventListener('click', function(event) {
+                const container = document.getElementById('notification-container');
+                if (container && !container.contains(event.target)) {
+                    notificationsDropdown.classList.add('hidden');
+                }
+            });
+        }
+        
+        // Mark all as read
+        if (markAllReadBtn) {
+            markAllReadBtn.addEventListener('click', function() {
+                fetch('{% url "mark_all_read" %}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update UI to reflect all notifications read
+                        document.querySelectorAll('.notification-item').forEach(item => {
+                            item.classList.remove('bg-amber-50/50');
+                            const readBtn = item.querySelector('.mark-read-btn');
+                            if (readBtn) readBtn.remove();
+                        });
+                        
+                        // Remove notification counter
+                        const counter = document.querySelector('#notification-button span');
+                        if (counter) counter.remove();
+                    }
+                })
+                .catch(error => console.error('Error marking notifications as read:', error));
+            });
+        }
+        
+        // Mark individual notification as read
+        markReadBtns.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const notificationId = this.dataset.id;
+                
+                fetch(`{% url "mark_notification_read" %}?id=${notificationId}`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'X-Requested-With': 'XMLHttpRequest'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update UI
+                        const item = this.closest('.notification-item');
+                        item.classList.remove('bg-amber-50/50');
+                        this.remove();
+                        
+                        // Update counter
+                        const counter = document.querySelector('#notification-button span');
+                        if (counter) {
+                            const count = parseInt(counter.textContent) - 1;
+                            if (count > 0) {
+                                counter.textContent = count;
+                            } else {
+                                counter.remove();
+                            }
+                        }
+                    }
+                })
+                .catch(error => console.error('Error marking notification as read:', error));
+            });
+        });
+    });
+</script>

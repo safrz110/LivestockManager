@@ -1,0 +1,293 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .max-w-8xl {
+        max-width: 90rem; /* 1440px */
+        margin-left: auto;
+        margin-right: auto;
+    }
+    /* Remove fixed height and let normal scrolling work */
+    .layout-container {
+        min-height: 100vh;
+        display: flex;
+        align-items: center;
+        padding: 2rem 0;
+    }
+    /* Make form naturally scrollable */
+    .form-container {
+        padding: 2rem 0;
+    }
+    /* Enhanced alerts */
+    .alert {
+        transform: translateY(0);
+        opacity: 1;
+        transition: all 0.5s ease;
+    }
+    .alert.hide {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+</style>
+
+<div class="layout-container relative">
+    <!-- Background Elements -->
+    <div class="absolute inset-0 z-0">
+        <div class="absolute inset-0 bg-gradient-to-br from-amber-500/10 via-amber-600/5 to-transparent"></div>
+    </div>
+    <!-- Animated Background Elements -->
+    <div class="absolute inset-0 z-0 overflow-hidden">
+        <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-amber-400/5 rounded-full blur-3xl animate-pulse"></div>
+        <div class="absolute bottom-1/3 right-1/3 w-72 h-72 bg-blue-500/5 rounded-full blur-3xl animate-pulse" style="animation-delay: 2s;"></div>
+    </div>
+    <div class="w-full max-w-8xl mx-auto px-4 z-10">
+        <!-- Enhanced Alert -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="mb-6 p-4 backdrop-blur-md {% if message.tags == 'error' %}bg-red-50/90 text-red-700 border-l-4 border-red-500{% else %}bg-green-50/90 text-green-700 border-l-4 border-green-500{% endif %} flex items-center alert" id="alert-message">
+                    <div class="mr-4 flex-shrink-0">
+                        <i class="fas fa-{% if message.tags == 'error' %}exclamation-circle text-red-500{% else %}check-circle text-green-500{% endif %}"></i>
+                    </div>
+                    <p class="font-medium">{{ message }}</p>
+                    <button type="button" class="ml-auto text-gray-400 hover:text-gray-500" onclick="dismissAlert()">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <div class="flex flex-col md:flex-row gap-8 items-center justify-center md:justify-between">
+            <!-- Left side content -->
+            <div class="w-full md:w-2/5 space-y-6 text-center md:text-left" data-aos="fade-right">
+                <h1 class="text-4xl md:text-5xl font-bold text-amber-900">Start Your Livestock Management Journey</h1>
+                <p class="text-xl text-gray-600 max-w-md">Join thousands of farmers optimizing their operations with our advanced livestock management tools.</p>
+                <div class="mt-8 space-y-4">
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 mt-1">
+                            <div class="bg-amber-100 rounded-full p-2 flex items-center justify-center">
+                                <i class="fas fa-check text-amber-600"></i>
+                            </div>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-lg font-semibold text-amber-900">Free 30-day trial</h3>
+                            <p class="text-gray-600">Full access to all features for 30 days without any commitment</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 mt-1">
+                            <div class="bg-amber-100 rounded-full p-2 flex items-center justify-center">
+                                <i class="fas fa-shield-alt text-amber-600"></i>
+                            </div>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-lg font-semibold text-amber-900">Secure & Private</h3>
+                            <p class="text-gray-600">Your data is encrypted and never shared with third parties</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start">
+                        <div class="flex-shrink-0 mt-1">
+                            <div class="bg-amber-100 rounded-full p-2 flex items-center justify-center">
+                                <i class="fas fa-tachometer-alt text-amber-600"></i>
+                            </div>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-lg font-semibold text-amber-900">Easy to Start</h3>
+                            <p class="text-gray-600">Setup your account in minutes and import your livestock data</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Registration Form -->
+            <div class="w-full md:w-1/2 form-container" data-aos="fade-left">
+                <div class="backdrop-blur-lg bg-white/80 p-8">
+                    <div class="flex justify-center mb-6">
+                        <div class="bg-amber-50 p-3 rounded-full">
+                            <i class="fas fa-user-plus text-amber-600 text-3xl"></i>
+                        </div>
+                    </div>
+                    
+                    <h2 class="text-2xl font-bold mb-6 text-amber-900 text-center">Register as Livestock Owner</h2>
+                    
+                    <form method="post" enctype="multipart/form-data" class="space-y-4">
+                        {% csrf_token %}
+                        <input type="hidden" name="csrfmiddlewaretoken" value="{{ csrf_token }}">
+                        
+                        <!-- Profile Picture -->
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-amber-900 mb-1">Profile Picture</label>
+                            <div class="mt-1 flex flex-col items-center">
+                                <div class="mb-3 relative group">
+                                    <div class="h-20 w-20 rounded-full overflow-hidden bg-gray-100 border-2 border-amber-300 shadow-md">
+                                        <img id="profile-preview" src="" alt="Profile Preview" class="h-full w-full object-cover hidden">
+                                        <div id="profile-placeholder" class="h-full w-full flex items-center justify-center">
+                                            <i class="fas fa-user text-gray-400 text-3xl"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="w-full">
+                                    <label for="id_profile_pic" class="cursor-pointer flex items-center justify-center px-4 py-2 bg-white border border-amber-200 rounded-xl text-amber-700 hover:bg-amber-50">
+                                        <i class="fas fa-camera mr-2"></i>
+                                        <span>Select Profile Photo</span>
+                                    </label>
+                                    <input type="file" name="profile_pic" id="id_profile_pic" class="hidden" accept="image/*" onchange="previewImage(this)">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Form Fields -->
+                        {% for field in form %}
+                            {% if field.name != 'profile_pic' %}
+                                <div class="mb-4">
+                                    <label for="{{ field.id_for_label }}" class="block text-sm font-medium text-amber-900 mb-1">
+                                        {{ field.label }}
+                                        {% if field.field.required %}<span class="text-red-500">*</span>{% endif %}
+                                    </label>
+                                    <div class="relative">
+                                        <span class="absolute {% if field.name == 'address' or field.name == 'animal_expertise' %}top-3{% else %}inset-y-0{% endif %} left-0 flex items-center pl-3 pointer-events-none text-gray-500 z-10">
+                                            <i class="fas fa-{% if field.name == 'username' %}user{% elif field.name == 'email' %}envelope{% elif 'password' in field.name %}lock{% elif field.name == 'first_name' or field.name == 'last_name' %}id-card{% elif field.name == 'phone_number' %}phone{% elif field.name == 'address' %}map-marker-alt{% elif field.name == 'animal_expertise' %}tasks{% else %}user{% endif %}"></i>
+                                        </span>
+                                        
+                                        {% if field.name == 'address' or field.name == 'animal_expertise' %}
+                                            <textarea 
+                                                name="{{ field.name }}" 
+                                                id="{{ field.id_for_label }}" 
+                                                rows="3"
+                                                class="w-full py-3 px-4 pl-10 bg-white border border-amber-200 focus:border-amber-500 focus:ring focus:ring-amber-200 focus:ring-opacity-50 outline-none transition-all resize-none"
+                                                placeholder="{% if field.name == 'address' %}Enter your complete address{% else %}Describe your experience with livestock management{% endif %}"
+                                                {% if field.field.required %}required{% endif %}
+                                            >{{ field.value|default:'' }}</textarea>
+                                        {% else %}
+                                            <input 
+                                                type="{% if 'password' in field.name %}password{% elif field.name == 'email' %}email{% elif field.name == 'phone_number' %}tel{% else %}text{% endif %}"
+                                                name="{{ field.name }}"
+                                                id="{{ field.id_for_label }}"
+                                                value="{{ field.value|default:'' }}"
+                                                class="w-full py-3 px-4 pl-10 bg-white border border-amber-200 focus:border-amber-500 focus:ring focus:ring-amber-200 focus:ring-opacity-50 outline-none transition-all"
+                                                placeholder="{% if field.name == 'username' %}Choose a username
+                                                        {% elif field.name == 'email' %}Enter your email address
+                                                        {% elif field.name == 'password1' %}Create a strong password
+                                                        {% elif field.name == 'password2' %}Confirm your password
+                                                        {% elif field.name == 'first_name' %}Enter your first name
+                                                        {% elif field.name == 'last_name' %}Enter your last name
+                                                        {% elif field.name == 'phone_number' %}Enter your phone number
+                                                        {% else %}{{ field.help_text|default:field.label }}{% endif %}"
+                                                {% if field.field.required %}required{% endif %}
+                                            >
+                                        {% endif %}
+                                    </div>
+                                    {% if field.help_text %}
+                                        <p class="mt-1 text-xs text-amber-600">{{ field.help_text }}</p>
+                                    {% endif %}
+                                    {% if field.errors %}
+                                        <p class="text-red-500 text-xs mt-1">{{ field.errors.0 }}</p>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+
+                        <div class="mt-4">
+                            <label class="flex items-center">
+                                <input type="checkbox" required class="rounded border-gray-300 text-amber-500 focus:border-amber-300 focus:ring focus:ring-amber-200 focus:ring-opacity-50">
+                                <span class="ml-2 text-gray-700 text-sm">I agree to the <a href="#" class="text-amber-600 hover:underline">Terms of Service</a> and <a href="#" class="text-amber-600 hover:underline">Privacy Policy</a></span>
+                            </label>
+                        </div>
+
+                        <button type="submit" class="w-full bg-gradient-to-r from-amber-400 to-amber-500 text-white py-3 px-6 font-bold hover:from-amber-500 hover:to-amber-600 transition duration-300 mt-2">
+                            <span class="flex items-center justify-center">
+                                <span>Create Account</span>
+                                <i class="fas fa-user-plus ml-2"></i>
+                            </span>
+                        </button>
+                    </form>
+
+                    <div class="mt-6 text-center">
+                        <p class="text-gray-600">
+                            Already have an account? 
+                            <a href="{% url 'login' %}" class="text-amber-600 hover:text-amber-800 font-medium transition">Login</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Initialize animations if AOS is available
+        if (typeof AOS !== 'undefined') {
+            AOS.refresh();
+        }
+
+        // Auto-dismiss alert after 5 seconds
+        setTimeout(function () {
+            dismissAlert();
+        }, 5000);
+
+        // CSRF token handling for AJAX requests
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        // Add CSRF token to all AJAX requests
+        const csrftoken = getCookie('csrftoken');
+        if (csrftoken) {
+            document.querySelectorAll('form').forEach(form => {
+                if (!form.querySelector('input[name="csrfmiddlewaretoken"]')) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = 'csrfmiddlewaretoken';
+                    input.value = csrftoken;
+                    form.appendChild(input);
+                }
+            });
+        }
+    });
+
+    // Function to dismiss alert
+    function dismissAlert() {
+        const alert = document.getElementById('alert-message');
+        if (alert) {
+            alert.classList.add('hide');
+            setTimeout(function () {
+                alert.style.display = 'none';
+            }, 500);
+        }
+    }
+
+    // Function to preview uploaded profile image
+    function previewImage(input) {
+        const preview = document.getElementById('profile-preview');
+        const placeholder = document.getElementById('profile-placeholder');
+
+        if (input.files && input.files[0]) {
+            const reader = new FileReader();
+
+            reader.onload = function (e) {
+                preview.src = e.target.result;
+                preview.classList.remove('hidden');
+                placeholder.classList.add('hidden');
+            }
+
+            reader.readAsDataURL(input.files[0]);
+        } else {
+            preview.classList.add('hidden');
+            placeholder.classList.remove('hidden');
+        }
+    }
+</script>
+{% endblock %}

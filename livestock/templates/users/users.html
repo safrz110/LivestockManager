@@ -1,0 +1,586 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<style>
+    .max-w-8xl {
+        max-width: 90rem; /* 1440px */
+        margin-left: auto;
+        margin-right: auto;
+    }
+    
+    .form-input {
+        width: 100%;
+        padding: 0.75rem 1rem 0.75rem 2.5rem;
+        background-color: white;
+        border: 1px solid rgb(253, 230, 138);
+        border-radius: 0.5rem;
+        outline: none;
+        transition: all 0.2s;
+    }
+    
+    .form-input:focus {
+        border-color: rgb(245, 158, 11);
+        box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+    }
+    
+    .input-icon {
+        position: absolute;
+        top: 50%;
+        left: 0.75rem;
+        transform: translateY(-50%);
+        color: rgb(156, 163, 175);
+        pointer-events: none;
+    }
+    
+    .user-card {
+        transition: all 0.3s ease;
+    }
+    
+    .user-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    }
+    
+    .verification-toggle {
+        transition: background-color 0.2s;
+    }
+    
+    .toggle-on {
+        background-color: #34D399;
+    }
+    
+    .toggle-off {
+        background-color: #9CA3AF;
+    }
+</style>
+
+<div class="relative py-12 min-h-[80vh]">
+    <!-- Background Elements -->
+    <div class="absolute inset-0 z-0">
+        <div class="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-amber-600/5 to-transparent"></div>
+    </div>
+    
+    <!-- Animated Background Elements -->
+    <div class="absolute inset-0 z-0 overflow-hidden">
+        <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-amber-400/5 rounded-full blur-3xl animate-pulse"></div>
+        <div class="absolute bottom-1/3 right-1/3 w-72 h-72 bg-blue-500/5 rounded-full blur-3xl animate-pulse" style="animation-delay: 2s;"></div>
+    </div>
+    
+    <div class="max-w-8xl mx-auto px-4 z-10 relative">
+        <!-- Header with glassmorphism -->
+        <div class="backdrop-blur-md bg-white/60 p-6 rounded-xl border border-white/20 shadow-lg mb-8" data-aos="fade-up">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center">
+                    <div class="bg-amber-100 p-3 rounded-full mr-4">
+                        <i class="fas fa-users-cog text-amber-600 text-xl"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold text-amber-900">User Management</h1>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <span class="text-amber-600">Total Users: <span class="font-medium">{{ users|length }}</span></span>
+                    <span class="text-green-600">Verified: <span class="font-medium">{{ verified_count }}</span></span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Search and Filter Bar -->
+        <div class="backdrop-blur-md bg-white/80 p-6 rounded-xl border border-white/20 shadow-lg mb-8" data-aos="fade-up" data-aos-delay="100">
+            <form method="get" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <!-- Search Box -->
+                <div class="relative">
+                    <span class="input-icon">
+                        <i class="fas fa-search"></i>
+                    </span>
+                    <input type="text" name="search" placeholder="Search by name, username or email" 
+                           value="{{ request.GET.search|default:'' }}" class="form-input">
+                </div>
+                
+                <!-- Filter By Verification Status -->
+                <div>
+                    <select name="verified" class="w-full p-3 border border-amber-200 rounded-lg pr-10 focus:border-amber-500 focus:ring focus:ring-amber-200 outline-none">
+                        <option value="">All Users</option>
+                        <option value="True" {% if request.GET.verified == 'True' %}selected{% endif %}>Verified Users</option>
+                        <option value="False" {% if request.GET.verified == 'False' %}selected{% endif %}>Unverified Users</option>
+                    </select>
+                </div>
+                
+                <!-- Submit Buttons -->
+                <div class="flex justify-end space-x-4">
+                    <a href="{% url 'user_management' %}" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-500 hover:bg-gray-50">
+                        Clear
+                    </a>
+                    <button type="submit" class="px-6 py-2 bg-gradient-to-r from-amber-400 to-amber-500 text-white rounded-lg shadow hover:shadow-lg transition-all">
+                        <i class="fas fa-filter mr-2"></i>
+                        Apply Filters
+                    </button>
+                </div>
+            </form>
+        </div>
+        
+        <!-- User List -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for user in users %}
+                <div class="user-card bg-white/80 backdrop-blur-sm rounded-xl overflow-hidden border border-amber-100/50 shadow-lg" data-aos="fade-up" data-aos-delay="{{ forloop.counter|add:100 }}">
+                    <div class="bg-gradient-to-r from-amber-400/10 to-amber-500/10 px-6 py-4 flex justify-between items-center">
+                        <h3 class="font-medium text-amber-900">
+                            {{ user.username }}
+                            {% if user.is_staff %}
+                                <span class="ml-2 bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full">Staff</span>
+                            {% endif %}
+                            {% if user.is_superuser %}
+                                <span class="ml-2 bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">Admin</span>
+                            {% endif %}
+                            {% if not user.is_active %}
+                                <span class="ml-2 bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">Disabled</span>
+                            {% endif %}
+                        </h3>
+                        <button type="button" 
+                                class="verification-toggle relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 {% if user.is_verified %}toggle-on{% else %}toggle-off{% endif %}"
+                                data-user-id="{{ user.id }}" 
+                                data-verified="{{ user.is_verified|lower }}"
+                                data-username="{{ user.username }}"
+                                {% if not user.is_active %}disabled{% endif %}>
+                            <span class="sr-only">Toggle verification</span>
+                            <span aria-hidden="true" 
+                                  class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out translate-x-0 {% if user.is_verified %}translate-x-5{% endif %}">
+                            </span>
+                        </button>
+                    </div>
+                    
+                    <div class="p-6 {% if not user.is_active %}opacity-60{% endif %}">
+                        <div class="flex items-center">
+                            <div class="h-14 w-14 rounded-full mr-4 overflow-hidden bg-amber-100 flex items-center justify-center">
+                                {% if user.profile_pic %}
+                                    <img src="{{ user.profile_pic.url }}" alt="{{ user.username }}" class="h-full w-full object-cover" 
+                                         onerror="this.onerror=null; this.src=''; this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                                    <div class="hidden h-full w-full items-center justify-center">
+                                        <i class="fas fa-user text-amber-500 text-2xl"></i>
+                                    </div>
+                                {% else %}
+                                    <i class="fas fa-user text-amber-500 text-2xl"></i>
+                                {% endif %}
+                            </div>
+                            
+                            <div>
+                                <h3 class="font-medium text-gray-800">{{ user.get_full_name|default:user.username }}</h3>
+                                <p class="text-sm text-gray-500">{{ user.email }}</p>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-4 space-y-2 text-sm text-gray-600">
+                            <div class="flex justify-between">
+                                <span>Date Joined:</span>
+                                <span>{{ user.date_joined|date:"M d, Y" }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Last Login:</span>
+                                <span>{{ user.last_login|date:"M d, Y" }}</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Animals Owned:</span>
+                                <span>{{ user.owner.animal_set.count }}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-6 flex justify-between">
+                            <a href="#" class="text-sm text-amber-600 hover:text-amber-800 flex items-center">
+                                <i class="fas fa-envelope mr-1"></i> Message
+                            </a>
+                            <a href="#" class="text-sm text-amber-600 hover:text-amber-800 flex items-center" onclick="viewUserDetails('{{ user.id }}')">
+                                View Details <i class="fas fa-chevron-right ml-1"></i>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            {% empty %}
+                <div class="col-span-3 text-center py-20 bg-white/80 backdrop-blur-sm rounded-xl border border-amber-100/50 shadow-lg">
+                    <div class="bg-amber-50 h-20 w-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-users-slash text-amber-300 text-3xl"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-700 mb-2">No Users Found</h3>
+                    <p class="text-gray-500 mb-4">No users match your current filter criteria.</p>
+                    <a href="{% url 'user_management' %}" class="px-6 py-2 bg-amber-100 text-amber-800 rounded-lg hover:bg-amber-200 transition-colors">
+                        Clear Filters
+                    </a>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Pagination -->
+        {% if is_paginated %}
+        <div class="mt-8 flex justify-center" data-aos="fade-up" data-aos-delay="300">
+            <div class="bg-white/80 backdrop-blur-sm rounded-xl overflow-hidden border border-amber-100/50 shadow-lg flex items-center divide-x divide-amber-100">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="px-4 py-2 text-gray-500 hover:bg-amber-50 hover:text-amber-600 transition-colors">
+                        <i class="fas fa-angle-double-left"></i>
+                    </a>
+                    <a href="?page={{ page_obj.previous_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="px-4 py-2 text-gray-500 hover:bg-amber-50 hover:text-amber-600 transition-colors">
+                        <i class="fas fa-angle-left"></i>
+                    </a>
+                {% endif %}
+                
+                {% for num in page_obj.paginator.page_range %}
+                    {% if num == page_obj.number %}
+                        <span class="px-4 py-2 bg-amber-100 text-amber-800 font-medium">{{ num }}</span>
+                    {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                        <a href="?page={{ num }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="px-4 py-2 text-gray-500 hover:bg-amber-50 hover:text-amber-600 transition-colors">
+                            {{ num }}
+                        </a>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="px-4 py-2 text-gray-500 hover:bg-amber-50 hover:text-amber-600 transition-colors">
+                        <i class="fas fa-angle-right"></i>
+                    </a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}{% for key, value in request.GET.items %}{% if key != 'page' %}&{{ key }}={{ value }}{% endif %}{% endfor %}" class="px-4 py-2 text-gray-500 hover:bg-amber-50 hover:text-amber-600 transition-colors">
+                        <i class="fas fa-angle-double-right"></i>
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- User Details Modal -->
+<div id="user-details-modal" class="fixed inset-0 bg-gray-900/70 backdrop-blur-sm z-50 flex items-center justify-center hidden">
+    <div class="bg-white rounded-xl shadow-xl p-6 w-full max-w-3xl transform transition-all">
+        <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-medium text-amber-900">User Details</h3>
+            <button type="button" class="text-gray-400 hover:text-gray-500" onclick="closeUserDetailsModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="user-details-content" class="min-h-[300px]">
+            <div class="flex justify-center items-center h-64">
+                <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-amber-500"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notification Container -->
+<div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col gap-3"></div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Initialize animations if AOS is available
+        if (typeof AOS !== 'undefined') {
+            AOS.refresh();
+        }
+        
+        // Toast notification function
+        function showToast(message, type = 'success') {
+            const toastContainer = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            
+            // Set toast class based on type
+            let iconClass = 'text-green-500';
+            let bgClass = 'bg-green-50 border-green-200';
+            let icon = '<i class="fas fa-check-circle"></i>';
+            
+            if (type === 'error') {
+                iconClass = 'text-red-500';
+                bgClass = 'bg-red-50 border-red-200';
+                icon = '<i class="fas fa-exclamation-circle"></i>';
+            } else if (type === 'warning') {
+                iconClass = 'text-amber-500';
+                bgClass = 'bg-amber-50 border-amber-200';
+                icon = '<i class="fas fa-exclamation-triangle"></i>';
+            } else if (type === 'info') {
+                iconClass = 'text-blue-500';
+                bgClass = 'bg-blue-50 border-blue-200';
+                icon = '<i class="fas fa-info-circle"></i>';
+            }
+            
+            // Create toast
+            toast.className = `${bgClass} border rounded-lg shadow-lg px-4 py-3 flex items-center justify-between min-w-[300px] transform transition-all duration-300 translate-x-0`;
+            toast.innerHTML = `
+                <div class="flex items-center">
+                    <span class="${iconClass} text-lg mr-3">${icon}</span>
+                    <span class="text-sm">${message}</span>
+                </div>
+                <button class="text-gray-400 hover:text-gray-600 ml-2 focus:outline-none">
+                    <i class="fas fa-times"></i>
+                </button>
+            `;
+            
+            // Add to container
+            toastContainer.appendChild(toast);
+            
+            // Close button functionality
+            toast.querySelector('button').addEventListener('click', () => {
+                toast.classList.add('opacity-0', 'translate-x-full');
+                setTimeout(() => {
+                    toast.remove();
+                }, 300);
+            });
+            
+            // Auto close after 4 seconds
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-x-full');
+                setTimeout(() => {
+                    if (toast.parentNode === toastContainer) {
+                        toast.remove();
+                    }
+                }, 300);
+            }, 4000);
+        }
+        
+        // Toggle verification status
+        const toggleButtons = document.querySelectorAll('.verification-toggle');
+        toggleButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const userId = this.dataset.userId;
+                const currentVerified = this.dataset.verified === 'true';
+                const toggleSpan = this.querySelector('span:not(.sr-only)');
+                const username = this.dataset.username;
+                
+                // Show loading state
+                this.disabled = true;
+                this.classList.add('opacity-50');
+                
+                // Make AJAX request to toggle verification
+                fetch(`/api/toggle-user-verification/${userId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        verified: !currentVerified
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    // Reset loading state
+                    this.disabled = false;
+                    this.classList.remove('opacity-50');
+                    
+                    if (data.success) {
+                        // Update button state
+                        this.dataset.verified = data.verified.toString();
+                        
+                        if (data.verified) {
+                            this.classList.remove('toggle-off');
+                            this.classList.add('toggle-on');
+                            toggleSpan.classList.add('translate-x-5');
+                            // Show success toast
+                            showToast(`${username}'s account has been verified`, 'success');
+                        } else {
+                            this.classList.remove('toggle-on');
+                            this.classList.add('toggle-off');
+                            toggleSpan.classList.remove('translate-x-5');
+                            // Show info toast
+                            showToast(`${username}'s account verification has been removed`, 'info');
+                        }
+                    } else {
+                        showToast(`Failed to update verification status: ${data.error || 'Unknown error'}`, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    this.disabled = false;
+                    this.classList.remove('opacity-50');
+                    showToast('An error occurred. Please try again.', 'error');
+                });
+            });
+        });
+    });
+    
+    // View user details modal
+    function viewUserDetails(userId) {
+        const modal = document.getElementById('user-details-modal');
+        const content = document.getElementById('user-details-content');
+        
+        // Show modal with loading state
+        modal.classList.remove('hidden');
+        document.body.classList.add('overflow-hidden');
+        
+        // Fetch user details
+        fetch(`/api/user-details/${userId}/`, {
+            method: 'GET',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Populate modal with user details
+                content.innerHTML = `
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <div class="md:col-span-1">
+                            <div class="bg-amber-50 p-4 rounded-lg flex flex-col items-center">
+                                <div class="h-24 w-24 rounded-full overflow-hidden bg-amber-100 mb-4">
+                                    ${data.user.profile_pic ? 
+                                        `<img src="${data.user.profile_pic}" alt="${data.user.username}" class="h-full w-full object-cover">` : 
+                                        `<div class="h-full w-full flex items-center justify-center">
+                                            <i class="fas fa-user text-amber-500 text-4xl"></i>
+                                        </div>`
+                                    }
+                                </div>
+                                <h3 class="text-lg font-medium text-gray-800">${data.user.full_name || data.user.username}</h3>
+                                <p class="text-sm text-gray-500">${data.user.email}</p>
+                                <div class="mt-2 flex flex-wrap justify-center gap-2">
+                                    ${data.user.is_staff ? 
+                                        `<span class="bg-amber-100 text-amber-800 text-xs px-2 py-1 rounded-full">Staff</span>` : ''
+                                    }
+                                    ${data.user.is_superuser ? 
+                                        `<span class="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">Admin</span>` : ''
+                                    }
+                                    ${data.user.is_verified ? 
+                                        `<span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Verified</span>` : 
+                                        `<span class="bg-gray-100 text-gray-800 text-xs px-2 py-1 rounded-full">Unverified</span>`
+                                    }
+                                    ${data.user.is_active ? 
+                                        `<span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Active</span>` : 
+                                        `<span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full">Disabled</span>`
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="md:col-span-2">
+                            <div class="bg-white border border-amber-100 rounded-lg p-4 mb-4">
+                                <h4 class="text-sm font-medium text-amber-900 mb-2">Contact Information</h4>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Email:</span>
+                                        <span>${data.user.email}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Phone:</span>
+                                        <span>${data.user.phone_number || 'Not provided'}</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-gray-600">Address:</span>
+                                        <span>${data.user.address || 'Not provided'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                <div class="bg-white border border-amber-100 rounded-lg p-4">
+                                    <h4 class="text-sm font-medium text-amber-900 mb-2">Account Information</h4>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Username:</span>
+                                            <span>${data.user.username}</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Date Joined:</span>
+                                            <span>${data.user.date_joined}</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Last Login:</span>
+                                            <span>${data.user.last_login || 'Never'}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="bg-white border border-amber-100 rounded-lg p-4">
+                                    <h4 class="text-sm font-medium text-amber-900 mb-2">Statistics</h4>
+                                    <div class="space-y-2 text-sm">
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Animals:</span>
+                                            <span>${data.user.animals_count}</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Health Records:</span>
+                                            <span>${data.user.health_records_count}</span>
+                                        </div>
+                                        <div class="flex justify-between">
+                                            <span class="text-gray-600">Ownership Transfers:</span>
+                                            <span>${data.user.transfer_count}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-end space-x-2 mt-4">
+                                <button type="button" class="px-4 py-2 border border-amber-300 text-amber-700 rounded hover:bg-amber-50" onclick="sendMessage(${data.user.id})">
+                                    <i class="fas fa-envelope mr-2"></i>Send Message
+                                </button>
+                                
+                                ${!data.user.is_superuser ? 
+                                    `<button type="button" class="px-4 py-2 ${data.user.is_active ? 'bg-red-50 border-red-300 text-red-700' : 'bg-green-50 border-green-300 text-green-700'} rounded hover:${data.user.is_active ? 'bg-red-100' : 'bg-green-100'}" 
+                                            onclick="toggleUserStatus(${data.user.id}, '${data.user.username}', ${data.user.is_active})">
+                                        <i class="fas fa-${data.user.is_active ? 'user-slash' : 'user-check'} mr-2"></i>${data.user.is_active ? 'Disable Account' : 'Enable Account'}
+                                    </button>` : 
+                                    ''
+                                }
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                content.innerHTML = `
+                    <div class="text-center py-8">
+                        <div class="bg-red-50 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <i class="fas fa-exclamation-triangle text-red-400 text-xl"></i>
+                        </div>
+                        <h3 class="text-lg font-medium text-gray-800 mb-2">Error Loading User</h3>
+                        <p class="text-gray-500">Could not load user details. Please try again.</p>
+                    </div>
+                `;
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching user details:', error);
+            content.innerHTML = `
+                <div class="text-center py-8">
+                    <div class="bg-red-50 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-exclamation-triangle text-red-400 text-xl"></i>
+                    </div>
+                    <h3 class="text-lg font-medium text-gray-800 mb-2">Error Loading User</h3>
+                    <p class="text-gray-500">Could not load user details. Please try again.</p>
+                </div>
+            `;
+        });
+    }
+    
+    function closeUserDetailsModal() {
+        document.getElementById('user-details-modal').classList.add('hidden');
+        document.body.classList.remove('overflow-hidden');
+    }
+    
+    function sendMessage(userId) {
+        // Placeholder for send message functionality
+        showToast('Message functionality not implemented yet.', 'info');
+    }
+    
+    function toggleUserStatus(userId, username, isActive) {
+        // Function to enable/disable user account
+        const actionText = isActive ? 'disable' : 'enable';
+        if (confirm(`Are you sure you want to ${actionText} ${username}'s account?`)) {
+            fetch(`/api/toggle-user-status/${userId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    active: !isActive
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showToast(`${username}'s account has been ${isActive ? 'disabled' : 'enabled'}.`, isActive ? 'warning' : 'success');
+                    closeUserDetailsModal();
+                    // Reload after a short delay
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showToast(`Failed to ${actionText} account: ${data.error || 'Unknown error'}`, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showToast(`An error occurred while trying to ${actionText} the account.`, 'error');
+            });
+        }
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,220 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    
+    <!-- SEO Metadata -->
+    <meta name="description" content="Comprehensive livestock management system for farmers and agricultural businesses">
+    <meta name="keywords" content="livestock, farming, agriculture, animal management, cattle, farm software">
+    <meta name="author" content="Prashant Kumar">
+    
+    <!-- Open Graph / Social Media Metadata -->
+    <meta property="og:title" content="Livestock Manager - Professional Farm Management System">
+    <meta property="og:description" content="Streamline operations, enhance productivity, and drive growth with our enterprise-grade livestock management solution.">
+    <meta property="og:image" content="https://cdn-icons-png.flaticon.com/512/6082/6082572.png">
+    <meta property="og:url" content="https://livestock-manager.onrender.com">
+    <meta property="og:type" content="website">
+    
+    <!-- Twitter Card Metadata -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Livestock Manager - Professional Farm Management System">
+    <meta name="twitter:description" content="Streamline operations, enhance productivity, and drive growth with our enterprise-grade livestock management solution.">
+    <meta name="twitter:image" content="https://cdn-icons-png.flaticon.com/512/6082/6082572.png">
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://livestock-manager.onrender.com">
+    
+    <!-- Favicon -->
+    {% include 'components/favicon.html' %}
+    
+    <title>{% block title %}Livestock Manager{% endblock %}</title>
+    
+    <!-- Add favicon -->
+    <link rel="icon" type="image/png" href="{% static 'images/logo.png' %}">
+    
+    <!-- Include Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Include Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Include AOS for animations -->
+    <link rel="stylesheet" href="https://unpkg.com/aos@next/dist/aos.css" />
+    
+    <style>
+        /* Custom styles for footer positioning */
+        html, body {
+            height: 100%;
+            min-height: 100%;
+            position: relative;
+        }
+        
+        /* Ensure sticky navbar works properly */
+        #main-navbar {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            backdrop-filter: blur(8px);
+        }
+        
+        /* When navbar is scrolled, add shadow effect */
+        #main-navbar.scrolled {
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+        
+        .main-content {
+            position: relative;
+            z-index: 1;
+            min-height: calc(100vh - 200px); /* Account for footer height */
+        }
+        
+        /* Ensure fixed navbar appears correctly */
+        header {
+            position: fixed;
+            width: 100%;
+            top: 0;
+            left: 0;
+            z-index: 1000;
+        }
+        
+        body {
+            padding-top: 0; /* Remove any existing padding */
+        }
+        
+        /* Adjust spacing for toast notifications to appear below navbar */
+        #toast-container {
+            top: 5rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    {% include 'components/navbar.html' %}
+    
+    <!-- Toast messages -->
+    {% if messages %}
+    <div class="fixed top-20 right-4 z-50 max-w-sm" id="toast-container">
+        {% for message in messages %}
+        <div class="bg-white border 
+            {% if message.tags == 'success toast' %}
+                border-green-400
+            {% elif message.tags == 'error toast' %}
+                border-red-400
+            {% else %}
+                border-amber-400
+            {% endif %} 
+            rounded-lg shadow-md p-4 mb-4 transform transition-all duration-300 ease-in-out opacity-100 scale-100" data-aos="fade-left" data-aos-duration="500">
+            <div class="flex items-center">
+                <div class="flex-shrink-0">
+                    {% if message.tags == 'success toast' %}
+                        <i class="fas fa-check-circle text-green-500"></i>
+                    {% elif message.tags == 'error toast' %}
+                        <i class="fas fa-exclamation-circle text-red-500"></i>
+                    {% else %}
+                        <i class="fas fa-info-circle text-amber-500"></i>
+                    {% endif %}
+                </div>
+                <div class="ml-3">
+                    <p class="text-sm text-gray-800">{{ message }}</p>
+                </div>
+                <div class="ml-auto pl-3">
+                    <button type="button" class="toast-close -mx-1.5 -my-1.5 rounded-lg p-1.5 text-gray-400 hover:text-gray-900 focus:outline-none">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <!-- Main content -->
+    <div class="main-content pb-24">  <!-- Added padding bottom to prevent content from being hidden behind footer -->
+        {% block content %}{% endblock %}
+    </div>
+    
+    <!-- Include the better footer with curved top -->
+    {% include 'components/footer.html' %}
+    
+    <!-- Include JS libraries -->
+    <script src="https://unpkg.com/aos@next/dist/aos.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize AOS
+            AOS.init({
+                duration: 800,
+                easing: 'ease-out-cubic',
+                once: true
+            });
+            
+            // Navbar scroll effect
+            const navbar = document.getElementById('main-navbar');
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 10) {
+                    navbar.classList.add('scrolled');
+                } else {
+                    navbar.classList.remove('scrolled');
+                }
+            });
+            
+            // Toast notification handling
+            const toastContainer = document.getElementById('toast-container');
+            if (toastContainer) {
+                const closeButtons = toastContainer.querySelectorAll('.toast-close');
+                closeButtons.forEach(button => {
+                    button.addEventListener('click', function() {
+                        const toast = this.closest('div[data-aos="fade-left"]');
+                        toast.classList.add('opacity-0', 'scale-95');
+                        setTimeout(() => {
+                            toast.remove();
+                        }, 300);
+                    });
+                });
+                
+                // Auto-hide toasts after 5 seconds
+                const toasts = toastContainer.querySelectorAll('div[data-aos="fade-left"]');
+                toasts.forEach(toast => {
+                    setTimeout(() => {
+                        toast.classList.add('opacity-0', 'scale-95');
+                        setTimeout(() => {
+                            toast.remove();
+                        }, 300);
+                    }, 5000);
+                });
+            }
+            
+            // Mobile menu toggle
+            const mobileMenuButton = document.getElementById('mobile-menu-button');
+            const mobileMenu = document.getElementById('mobile-menu');
+            
+            if (mobileMenuButton && mobileMenu) {
+                mobileMenuButton.addEventListener('click', function() {
+                    mobileMenu.classList.toggle('hidden');
+                });
+            }
+            
+            // User dropdown menu toggle
+            const userMenuButton = document.getElementById('user-menu-button');
+            const userMenu = document.getElementById('user-menu');
+            
+            if (userMenuButton && userMenu) {
+                userMenuButton.addEventListener('click', function() {
+                    userMenu.classList.toggle('hidden');
+                });
+                
+                // Close dropdown when clicking outside
+                document.addEventListener('click', function(event) {
+                    const userMenuContainer = document.getElementById('user-menu-container');
+                    if (userMenuContainer && !userMenuContainer.contains(event.target) && !userMenu.classList.contains('hidden')) {
+                        userMenu.classList.add('hidden');
+                    }
+                });
+            }
+        });
+    </script>
+    
+    <!-- Additional scripts -->
+    {% block scripts %}{% endblock %}
+</body>
+</html>

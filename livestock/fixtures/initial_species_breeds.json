@@ -1,0 +1,204 @@
+[
+  {
+    "model": "livestock.species",
+    "pk": 1,
+    "fields": {
+      "name": "Cow"
+    }
+  },
+  {
+    "model": "livestock.species",
+    "pk": 2,
+    "fields": {
+      "name": "Buffalo"
+    }
+  },
+  {
+    "model": "livestock.species",
+    "pk": 3,
+    "fields": {
+      "name": "Goat"
+    }
+  },
+  {
+    "model": "livestock.species",
+    "pk": 4,
+    "fields": {
+      "name": "Sheep"
+    }
+  },
+  {
+    "model": "livestock.species",
+    "pk": 5,
+    "fields": {
+      "name": "Pig"
+    }
+  },
+  {
+    "model": "livestock.species",
+    "pk": 6,
+    "fields": {
+      "name": "Chicken"
+    }
+  },
+  {
+    "model": "livestock.breed",
+    "pk": 1,
+    "fields": {
+      "name": "Holstein",
+      "species": 1
+    }
+  },
+  {
+    "model": "livestock.breed",
+    "pk": 2,
+    "fields": {
+      "name": "Jersey",
+      "species": 1
+    }
+  },
+  {
+    "model": "livestock.breed",
+    "pk": 3,
+    "fields": {
+      "name": "Brown Swiss",
+      "species": 1
+    }
+  },
+  {
+    "model": "livestock.breed",
+    "pk": 4,
+    "fields": {
+      "name": "Hereford",
+      "species": 1
+    }
+  },
+  {
+    "model": "livestock.breed",
+    "pk": 5,
+    "fields": {
+      "name": "Angus",
+      "species": 1
+    }
+  },
+  {
+    "model": "livestock.breed",
+    "pk": 6,
+    "fields": {
+      "name": "Murrah",
+      "species": 2
+    }
+  },
+  {
+    "model": "livestock.breed",
+    "pk": 7,
+    "fields": {
+      "name": "Surti",
+      "species": 2
+    }
+  },
+  {
+    "model": "livestock.breed",
+    "pk": 8,
+    "fields": {
+      "name": "Mehsana",
+      "species": 2
+    }
+  },
+  {
+    "model": "livestock.breed",
+    "pk": 9,
+    "fields": {
+      "name": "Boer",
+      "species": 3
+    }
+  },
+  {
+    "model": "livestock.breed",
+    "pk": 10,
+    "fields": {
+      "name": "Nubian",
+      "species": 3
+    }
+  },
+  {
+    "model": "livestock.breed",
+    "pk": 11,
+    "fields": {
+      "name": "Alpine",
+      "species": 3
+    }
+  },
+  {
+    "model": "livestock.breed",
+    "pk": 12,
+    "fields": {
+      "name": "Merino",
+      "species": 4
+    }
+  },
+  {
+    "model": "livestock.breed",
+    "pk": 13,
+    "fields": {
+      "name": "Suffolk",
+      "species": 4
+    }
+  },
+  {
+    "model": "livestock.breed",
+    "pk": 14,
+    "fields": {
+      "name": "Dorper",
+      "species": 4
+    }
+  },
+  {
+    "model": "livestock.breed",
+    "pk": 15,
+    "fields": {
+      "name": "Yorkshire",
+      "species": 5
+    }
+  },
+  {
+    "model": "livestock.breed",
+    "pk": 16,
+    "fields": {
+      "name": "Duroc",
+      "species": 5
+    }
+  },
+  {
+    "model": "livestock.breed",
+    "pk": 17,
+    "fields": {
+      "name": "Hampshire",
+      "species": 5
+    }
+  },
+  {
+    "model": "livestock.breed",
+    "pk": 18,
+    "fields": {
+      "name": "Leghorn",
+      "species": 6
+    }
+  },
+  {
+    "model": "livestock.breed",
+    "pk": 19,
+    "fields": {
+      "name": "Rhode Island Red",
+      "species": 6
+    }
+  },
+  {
+    "model": "livestock.breed",
+    "pk": 20,
+    "fields": {
+      "name": "Plymouth Rock",
+      "species": 6
+    }
+  }
+]
